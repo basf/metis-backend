@@ -1,0 +1,6 @@
+flask
+flask-login
+flask-limiter
+rauth
+netius
+setuptools
