@@ -1,0 +1,7 @@
+/bin
+/lib
+/lib64
+*.py[co]
+pip-selfcheck.json
+pip-log.txt
+pyvenv.cfg
