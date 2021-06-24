@@ -267,6 +267,10 @@ if __name__ == '__main__':
     app = Flask(__name__)
     app.debug = False
     app.register_blueprint(app_server)
-    app.run(port=7070)
+    #app.run(port=7070)
+
+    from netius.servers import WSGIServer
+    server = WSGIServer(app=app)
+    server.serve(host='0.0.0.0', port=7070)
 
     # NB dev-only, no production usage
