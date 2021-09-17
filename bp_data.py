@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, request, Response
 from mpds_ml_labs.struct_utils import detect_format, poscar_to_ase, refine, get_formula
 from mpds_ml_labs.cif_utils import cif_to_ase
 
-from utils import SECRET, fmt_msg, is_plain_text, html_formula, is_valid_uuid
+from utils import SECRET, fmt_msg, is_plain_text, html_formula, is_valid_uuid, ase_serialize
 from i_data import Data_Storage
 
 
@@ -28,13 +28,11 @@ def create():
     """
     secret = request.values.get('secret')
     if secret != SECRET:
-        current_app.logger.warning("Illegal request from an unauthorized user")
         return fmt_msg('Unauthorized', 401)
 
     content = request.values.get('content')
     if not content:
-        current_app.logger.warning("Illegal request from a known user")
-        return fmt_msg('Empty or invalid content')
+        return fmt_msg('Empty request')
 
     if not 0 < len(content) < 200000:
         return fmt_msg('Request size is invalid')
@@ -56,26 +54,26 @@ def create():
 
     else: return fmt_msg('Provided data format is not supported')
 
-    ase_obj, error = refine(ase_obj)
+    ase_obj, error = refine(ase_obj, conventional_cell=True)
     if error:
         return fmt_msg(error)
 
     formula = get_formula(ase_obj)
-    #content = ase_to_json(ase_obj)
+    content = ase_serialize(ase_obj)
 
     db = Data_Storage()
-    uuid = db.put_item(formula, content)
+    uuid = db.put_item(formula, content, 0)
     db.close()
 
     return Response(json.dumps(dict(
         uuid=uuid,
-        type=random.randint(0, 3),
+        type=0,
         name=html_formula(formula),
     ), indent=4), content_type='application/json', status=200)
 
 
-@bp_data.route("/list", methods=['POST'])
-def list():
+@bp_data.route("/listing", methods=['POST'])
+def listing():
     """
     Expects
         secret: string
@@ -87,26 +85,37 @@ def list():
     """
     secret = request.values.get('secret')
     if secret != SECRET:
-        current_app.logger.warning("Illegal request from an unauthorized user")
         return fmt_msg('Unauthorized', 401)
 
     uuid = request.values.get('uuid')
     current_app.logger.warning(uuid)
-    if not uuid or not is_valid_uuid(uuid):
-        current_app.logger.warning("Illegal request from a known user")
-        return fmt_msg('Empty or invalid content')
+    if not uuid:
+        return fmt_msg('Empty request')
 
     db = Data_Storage()
 
     if ':' in uuid:
-        items = db.get_items(uuid.split(':'))
+        uuids = set( uuid.split(':') )
+        for uuid in uuids:
+            if not is_valid_uuid(uuid): return fmt_msg('Invalid request')
+
+        items = db.get_items(list(uuids))
+
+        found_uuids = set( [item['uuid'] for item in items] )
+        if found_uuids != uuids:
+            return fmt_msg('No such content', 204)
+
     else:
+        if not is_valid_uuid(uuid): return fmt_msg('Invalid request')
+
         item = db.get_item(uuid)
         items = [item] if item else []
 
+        if not items: return fmt_msg('No such content', 204)
+
     db.close()
 
-    items = [dict(uuid=item.uuid, name=item.label, type=item.type) for item in items]
+    items = [dict(uuid=item['uuid'], name=html_formula(item['label']), type=item['type']) for item in items]
     return Response(json.dumps(items, indent=4), content_type='application/json', status=200)
 
 
@@ -122,13 +131,11 @@ def delete():
     """
     secret = request.values.get('secret')
     if secret != SECRET:
-        current_app.logger.warning("Illegal request from an unauthorized user")
         return fmt_msg('Unauthorized', 401)
 
     uuid = request.values.get('uuid')
     if not uuid or not is_valid_uuid(uuid):
-        current_app.logger.warning("Illegal request from a known user")
-        return fmt_msg('Empty or invalid content')
+        return fmt_msg('Empty or invalid request')
 
     db = Data_Storage()
     result = db.drop_item(uuid)

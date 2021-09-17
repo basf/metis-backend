@@ -23,14 +23,14 @@ class Data_Storage(object):
         self.cursor = self.connection.cursor()
 
 
-    def put_item(self, label, content):
+    def put_item(self, label, content, type):
         self.cursor.execute("""
-        INSERT INTO data_items (label, content) VALUES ('{label}', '{content}') RETURNING item_id;
-        """.format(label=label, content=content))
+        INSERT INTO data_items (label, content, type) VALUES ('{label}', '{content}', {type}) RETURNING item_id;
+        """.format(label=label, content=content, type=type))
 
         self.connection.commit()
 
-        return self.cursor.fetchone()[0]
+        return str( self.cursor.fetchone()[0] )
 
 
     def get_item(self, uuid):
@@ -38,7 +38,7 @@ class Data_Storage(object):
         row = self.cursor.fetchone()
         if not row:
             return False
-        return dict(uuid=row[0], label=row[1], content=row[2], type=row[3])
+        return dict(uuid=str(row[0]), label=row[1], content=row[2], type=row[3])
 
 
     def get_items(self, uuids):
@@ -47,7 +47,7 @@ class Data_Storage(object):
         sql_statement = 'SELECT item_id, label, content, type FROM data_items WHERE {};'.format(query_string)
         self.cursor.execute(sql_statement, uuids)
 
-        return [dict(uuid=row[0], label=row[1], content=row[2], type=row[3]) for row in self.cursor.fetchall()]
+        return [dict(uuid=str(row[0]), label=row[1], content=row[2], type=row[3]) for row in self.cursor.fetchall()]
 
 
     def drop_item(self, uuid):
