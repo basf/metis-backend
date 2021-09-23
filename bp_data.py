@@ -4,7 +4,7 @@ import json
 
 from flask import Blueprint, current_app, request, Response
 
-from mpds_ml_labs.struct_utils import detect_format, poscar_to_ase, refine, get_formula
+from mpds_ml_labs.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
 from mpds_ml_labs.cif_utils import cif_to_ase
 
 from utils import SECRET, fmt_msg, is_plain_text, html_formula, is_valid_uuid, ase_serialize
@@ -44,15 +44,19 @@ def create():
 
     if fmt == 'cif':
         ase_obj, error = cif_to_ase(content)
-        if error:
-            return fmt_msg(error)
 
     elif fmt == 'poscar':
         ase_obj, error = poscar_to_ase(content)
-        if error:
-            return fmt_msg(error)
+
+    elif fmt == 'optimade':
+        ase_obj, error = optimade_to_ase(content)
 
     else: return fmt_msg('Provided data format is not supported')
+
+    if error: return fmt_msg(error)
+
+    if 'disordered' in ase_obj.info:
+        return fmt_msg('Structural disorder is not supported')
 
     ase_obj, error = refine(ase_obj, conventional_cell=True)
     if error:
