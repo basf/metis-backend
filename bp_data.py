@@ -51,7 +51,7 @@ def create():
     elif fmt == 'optimade':
         ase_obj, error = optimade_to_ase(content)
 
-    else: return fmt_msg('Provided data format is not supported')
+    else: return fmt_msg('Provided data format unsuitable or not recognized')
 
     if error: return fmt_msg(error)
 
