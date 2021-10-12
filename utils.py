@@ -1,18 +1,12 @@
 
 import uuid
-import math
 import pickle
 import base64
-import json
-from urllib.parse import urlencode
 
-import httplib2
 from flask import Response, current_app
 
 
 SECRET = 'b088a178-47db-458f-b00d-465490f9517a'
-
-req = httplib2.Http()
 
 
 def fmt_msg(msg, http_code=400):
@@ -63,23 +57,6 @@ def ase_unserialize(string):
     return pickle.loads(base64.b64decode(string))
 
 
-def make_request(url, data, httpverb='GET', headers={}):
-
-    url = url + '?' + urlencode(data)
-
-    if httpverb == 'GET':
-        response, content = req.request(url, httpverb, headers=headers)
-
-    else:
-        headers.update({'Content-type': 'application/x-www-form-urlencoded'})
-        response, content = req.request(url, httpverb, headers=headers, body=urlencode(data))
-
-    if math.floor(response.status / 100) != 2: raise RuntimeError( "HTTP error %s: %s" % (response.status, content) )
-
-    if not content:
-        content = '{}'
-
-    return response, json.loads(content)
 
 
 if __name__ == "__main__":
