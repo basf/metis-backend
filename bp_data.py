@@ -4,10 +4,10 @@ import json
 
 from flask import Blueprint, current_app, request, Response
 
-from mpds_ml_labs.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
-from mpds_ml_labs.cif_utils import cif_to_ase
+from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
+from i_structures.cif_utils import cif_to_ase
 
-from utils import SECRET, fmt_msg, is_plain_text, html_formula, is_valid_uuid, ase_serialize
+from utils import fmt_msg, key_auth, is_plain_text, html_formula, is_valid_uuid, ase_serialize
 from i_data import Data_Storage
 
 
@@ -15,21 +15,17 @@ bp_data = Blueprint('data', __name__, url_prefix='/data')
 
 
 @bp_data.route("/create", methods=['POST'])
+@key_auth
 def create():
     """
     Data item recognition and saving logics
     Expects
-        secret: string
         content: string
     Returns
         JSON->error: string
         or confirmation object
         {object->uuid, object->type, object->name}
     """
-    secret = request.values.get('secret')
-    if secret != SECRET:
-        return fmt_msg('Unauthorized', 401)
-
     content = request.values.get('content')
     if not content:
         return fmt_msg('Empty request')
@@ -77,20 +73,16 @@ def create():
 
 
 @bp_data.route("/listing", methods=['POST'])
+@key_auth
 def listing():
     """
     Expects
-        secret: string
         uuid: uuid or uuid[]
     Returns
         JSON->error: string
         or listing
         [ {object->uuid, object->type, object->name}, ... ]
     """
-    secret = request.values.get('secret')
-    if secret != SECRET:
-        return fmt_msg('Unauthorized', 401)
-
     uuid = request.values.get('uuid')
     current_app.logger.warning(uuid)
     if not uuid:
@@ -124,19 +116,15 @@ def listing():
 
 
 @bp_data.route("/delete", methods=['POST'])
+@key_auth
 def delete():
     """
     Expects
-        secret: string
         uuid: uuid
     Returns
         JSON->error: string
         or JSON empty dict
     """
-    secret = request.values.get('secret')
-    if secret != SECRET:
-        return fmt_msg('Unauthorized', 401)
-
     uuid = request.values.get('uuid')
     if not uuid or not is_valid_uuid(uuid):
         return fmt_msg('Empty or invalid request')

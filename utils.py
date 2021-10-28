@@ -2,11 +2,27 @@
 import uuid
 import pickle
 import base64
+from functools import wraps
 
-from flask import Response, current_app
+from flask import Response, current_app, request
 
 
 SECRET = 'b088a178-47db-458f-b00d-465490f9517a'
+
+
+def key_auth(f):
+    """
+    Flask decorator
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        key = request.headers.get('Key')
+        if key == SECRET:
+            return f(*args, **kwargs)
+
+        return fmt_msg('Unauthorized', 401)
+
+    return decorated
 
 
 def fmt_msg(msg, http_code=400):

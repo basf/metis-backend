@@ -8,7 +8,7 @@ from flask import Blueprint, current_app, request, Response
 from yascheduler import CONFIG_FILE
 from yascheduler.scheduler import Yascheduler
 
-from utils import SECRET, fmt_msg, is_valid_uuid, ase_unserialize
+from utils import fmt_msg, key_auth, is_valid_uuid, ase_unserialize
 from i_data import Data_Storage
 from i_calculations import Calc_Setup
 
@@ -23,19 +23,15 @@ calcs = Calc_Setup()
 
 
 @bp_calculations.route("/create", methods=['POST'])
+@key_auth
 def create():
     """
     Expects
-        secret: string
         uuid: uuid
     Returns
         JSON->error: string
         or JSON {uuid}
     """
-    secret = request.values.get('secret')
-    if secret != SECRET:
-        return fmt_msg('Unauthorized', 401)
-
     uuid = request.values.get('uuid')
     if not uuid or not is_valid_uuid(uuid):
         return fmt_msg('Empty or invalid request', 400)
@@ -59,19 +55,15 @@ def create():
 
 
 @bp_calculations.route("/status", methods=['POST'])
+@key_auth
 def status():
     """
     Expects
-        secret: string
         uuid: uuid or uuid[]
     Returns
         JSON->error::string
         or JSON {progress}
     """
-    secret = request.values.get('secret')
-    if secret != SECRET:
-        return fmt_msg('Unauthorized', 401)
-
     uuid = request.values.get('uuid')
     if not uuid:
         return fmt_msg('Empty request')
