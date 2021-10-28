@@ -1,14 +1,20 @@
+
+# Backend part
+
 setuptools
+cython
 pg8000
+flask
+netius
+ujson
+
+# Scientific part
+
 numpy
 ase
+pycodcif
+spglib
 optimade
 git+https://github.com/tilde-lab/yascheduler
 git+https://github.com/tilde-lab/aiida-crystal-dft
-git+https://github.com/mpds-io/mpds-ml-labs
 git+https://github.com/mpds-io/mpds-aiida
-flask
-flask-login
-flask-limiter
-rauth
-netius
