@@ -2,24 +2,19 @@
 import pg8000
 
 
-DB_USER = 'postgres'
-DB_PASS = 'postgres'
-DB_HOST = 'localhost'
-DB_PORT = 5432
-DB_BASE = 'aiidadb'
 DB_TABLE = 'bscience_data_items'
 
 
 class Data_Storage(object):
 
-    def __init__(self):
+    def __init__(self, user, password, database, host, port=5432):
 
         self.connection = pg8000.connect(
-            user=DB_USER,
-            password=DB_PASS,
-            database=DB_BASE,
-            host=DB_HOST,
-            port=DB_PORT
+            user=user,
+            password=password,
+            database=database,
+            host=host,
+            port=int(port)
         )
         self.cursor = self.connection.cursor()
 
