@@ -8,8 +8,7 @@ from flask import Blueprint, current_app, request, Response
 from yascheduler import CONFIG_FILE
 from yascheduler.scheduler import Yascheduler
 
-from utils import fmt_msg, key_auth, is_valid_uuid, ase_unserialize
-from i_data import Data_Storage
+from utils import get_data_storage, fmt_msg, key_auth, is_valid_uuid, ase_unserialize
 from i_calculations import Calc_Setup
 
 
@@ -36,7 +35,7 @@ def create():
     if not uuid or not is_valid_uuid(uuid):
         return fmt_msg('Empty or invalid request', 400)
 
-    db = Data_Storage()
+    db = get_data_storage()
     item = db.get_item(uuid)
     if not item:
         return fmt_msg('No such content', 204)
@@ -68,7 +67,7 @@ def status():
     if not uuid:
         return fmt_msg('Empty request')
 
-    db = Data_Storage()
+    db = get_data_storage()
 
     if ':' in uuid:
         uuids = set( uuid.split(':') )

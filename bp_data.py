@@ -1,5 +1,4 @@
 
-import random
 import json
 
 from flask import Blueprint, current_app, request, Response
@@ -7,8 +6,7 @@ from flask import Blueprint, current_app, request, Response
 from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
 from i_structures.cif_utils import cif_to_ase
 
-from utils import fmt_msg, key_auth, is_plain_text, html_formula, is_valid_uuid, ase_serialize
-from i_data import Data_Storage
+from utils import get_data_storage, fmt_msg, key_auth, is_plain_text, html_formula, is_valid_uuid, ase_serialize
 
 
 bp_data = Blueprint('data', __name__, url_prefix='/data')
@@ -61,7 +59,7 @@ def create():
     formula = get_formula(ase_obj)
     content = ase_serialize(ase_obj)
 
-    db = Data_Storage()
+    db = get_data_storage()
     uuid = db.put_item(formula, content, 0)
     db.close()
 
@@ -88,7 +86,7 @@ def listing():
     if not uuid:
         return fmt_msg('Empty request')
 
-    db = Data_Storage()
+    db = get_data_storage()
 
     if ':' in uuid:
         uuids = set( uuid.split(':') )
@@ -129,7 +127,7 @@ def delete():
     if not uuid or not is_valid_uuid(uuid):
         return fmt_msg('Empty or invalid request')
 
-    db = Data_Storage()
+    db = get_data_storage()
     result = db.drop_item(uuid)
     db.close()
 

@@ -1,13 +1,26 @@
 
+import os.path
 import uuid
 import pickle
 import base64
 from functools import wraps
+from configparser import ConfigParser
 
 from flask import Response, current_app, request
 
+from i_data import Data_Storage
 
-SECRET = 'b088a178-47db-458f-b00d-465490f9517a'
+
+CONFIG_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'conf/env.ini'))
+assert os.path.exists(CONFIG_PATH)
+config = ConfigParser()
+config.read(CONFIG_PATH)
+
+
+def get_data_storage():
+    return Data_Storage(
+        **dict(config.items('db'))
+    )
 
 
 def key_auth(f):
@@ -17,7 +30,7 @@ def key_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         key = request.headers.get('Key')
-        if key == SECRET:
+        if key == config.get('api', 'key'):
             return f(*args, **kwargs)
 
         return fmt_msg('Unauthorized', 401)
@@ -71,8 +84,6 @@ def ase_serialize(ase_obj):
 
 def ase_unserialize(string):
     return pickle.loads(base64.b64decode(string))
-
-
 
 
 if __name__ == "__main__":
