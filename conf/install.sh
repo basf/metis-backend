@@ -1,7 +1,7 @@
 #!/bin/bash
 
-PG_SOURCE_ADDR=https://ftp.postgresql.org/pub/source/v13.4/postgresql-13.4.tar.gz # NB subject to update
-PG_VERSION="13.4" # NB subject to update
+PG_VERSION="13.5" # NB subject to update
+PG_SOURCE_ADDR=https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.gz
 
 SETTINGS=(
 postgresql.conf
@@ -54,5 +54,6 @@ su postgres -c "/data/pg/bin/pg_ctl -D /data/pg/db -l /tmp/logfile start"
 su postgres -c "/data/pg/bin/createdb aiidadb"
 
 chown -R postgres:postgres /data/pg
-cd ..
-cp $(dirname $0)/postgresql.conf /data/pg/db/
+cd $(dirname $0)
+cp postgresql.conf /data/pg/db/
+cp env.ini.sample env.ini
