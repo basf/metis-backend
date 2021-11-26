@@ -14,4 +14,6 @@ Run `supervisorctl status` (see `conf/supervisord.conf` for details).
 
 ## License
 
+Copyright 2021-2022 BASF SE
+
 BSD 3-Clause
