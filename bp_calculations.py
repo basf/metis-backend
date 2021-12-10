@@ -18,7 +18,7 @@ config = ConfigParser()
 config.read(CONFIG_FILE)
 yac = Yascheduler(config)
 
-calcs = Calc_Setup()
+setup = Calc_Setup()
 
 
 @bp_calculations.route("/create", methods=['POST'])
@@ -44,7 +44,7 @@ def create():
         return fmt_msg('Wrong item requested', 400)
 
     ase_obj = ase_unserialize(item['content'])
-    submittable = calcs.preprocess(ase_obj, item['label'])
+    submittable = setup.preprocess(ase_obj, item['label'])
 
     task_id = yac.queue_submit_task(item['label'], submittable)
     new_uuid = db.put_item('$', str(task_id), 1)
