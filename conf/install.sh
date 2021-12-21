@@ -56,4 +56,5 @@ su postgres -c "/data/pg/bin/createdb aiidadb"
 chown -R postgres:postgres /data/pg
 cd $(dirname $0)
 cp postgresql.conf /data/pg/db/
+cp supervisord.conf /etc/supervisor/
 cp env.ini.sample env.ini
