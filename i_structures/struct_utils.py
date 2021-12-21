@@ -1,8 +1,8 @@
 
 import math
+import re
 import random
 import itertools
-import fractions
 from functools import reduce
 from io import StringIO
 
@@ -109,7 +109,7 @@ def json_to_ase(datarow):
         return None, "ASE cannot handle structure: %s" % ex
 
 
-def optimade_to_ase(structure):
+def optimade_to_ase(structure, skip_disorder=False):
     """
     A very permissive Optimade format support
     so far WITHOUT the disordered structures
@@ -124,25 +124,38 @@ def optimade_to_ase(structure):
     if 'data' in structure and type(structure['data']) == list and len(structure['data']):
         structure = structure['data'][0]
 
-    basis, symbols = [], []
+    atom_data = []
 
-    if 'species' not in structure['attributes']:
-        return None, "Atoms missing"
+    # try *species* attr
+    for n, specie in enumerate(structure['attributes'].get('species', [])):
+        try:
+            atom_data.append(Atom(specie['chemical_symbols'][0], structure['attributes']['cartesian_site_positions'][n]))
+        except KeyError as exc:
+            return None, "Unrecognized atom symbol: %s" % exc
 
-    for n, specie in enumerate(structure['attributes']['species']):
-
-        if len(specie['chemical_symbols']) > 1:
+        if not skip_disorder and len(specie['chemical_symbols']) > 1:
             if 'concentration' not in specie:
                 return None, "Atomic disorder data incomplete"
 
             return None, "Structural disorder is not supported"
 
-        symbols.append(specie['chemical_symbols'][0])
-        basis.append(structure['attributes']['cartesian_site_positions'][n])
+    # try *species_at_sites* or *elements* attr
+    if not atom_data:
+        for n, specie in enumerate(
+            structure['attributes'].get('species_at_sites',
+                structure['attributes'].get('elements', [])
+            )
+        ):
+            try:
+                atom_data.append(Atom(extract_chemical_element(specie), structure['attributes']['cartesian_site_positions'][n]))
+            except KeyError as exc:
+                return None, "Unrecognized atom symbol: %s" % exc
+
+    if not atom_data:
+        return None, "Atoms missing"
 
     return Atoms(
-        symbols=symbols,
-        positions=basis,
+        atom_data,
         cell=structure['attributes']['lattice_vectors'],
         pbc=structure['attributes'].get('dimension_types') or True
     ), None
@@ -198,7 +211,7 @@ def get_formula(ase_obj, find_gcd=True, as_dict=False):
         else:
             parsed_formula[label] += 1
 
-    expanded = reduce(fractions.gcd, parsed_formula.values()) if find_gcd else 1
+    expanded = reduce(math.gcd, parsed_formula.values()) if find_gcd else 1
     if expanded > 1:
         parsed_formula = {el: int(content / float(expanded))
                         for el, content in parsed_formula.items()}
@@ -303,3 +316,7 @@ def order_disordered(ase_obj):
                         return None, 'Unrecognized atom symbol: %s' % exc
 
     return order_obj, None
+
+
+def extract_chemical_element(str):
+    return re.sub("\W", "", str)

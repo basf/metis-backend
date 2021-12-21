@@ -46,7 +46,7 @@ def create():
     ase_obj = ase_unserialize(item['content'])
     submittable = setup.preprocess(ase_obj, item['label'])
 
-    task_id = yac.queue_submit_task(item['label'], submittable)
+    task_id = yac.queue_submit_task(item['label'], submittable, 'dummy')
     new_uuid = db.put_item('$', str(task_id), 1)
     db.close()
 
