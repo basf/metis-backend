@@ -6,6 +6,7 @@ pg8000
 flask
 netius
 ujson
+httplib2
 
 # Scientific part
 
