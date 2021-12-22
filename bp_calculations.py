@@ -117,3 +117,16 @@ def status():
 
     db.close()
     return Response(json.dumps(results, indent=4), content_type='application/json', status=200)
+
+
+@bp_calculations.route("/delete", methods=['POST'])
+@key_auth
+def delete():
+    """
+    Expects
+        uuid: uuid
+    Returns
+        JSON->error: string
+        or JSON {uuid}
+    """
+    return Response('{}', content_type='application/json', status=200)
