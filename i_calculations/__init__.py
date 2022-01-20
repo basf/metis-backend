@@ -3,7 +3,7 @@ import random
 import string
 
 
-class Calc_Setup(object):
+class Calc_setup(object):
 
     def __init__(self):
         """
@@ -33,5 +33,5 @@ class Calc_Setup(object):
 
 if __name__ == "__main__":
 
-    setup = Calc_Setup()
+    setup = Calc_setup()
     print(setup.generate_input())

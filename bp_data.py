@@ -1,10 +1,13 @@
 
+#from pprint import pprint
 import json
+from unidecode import unidecode
 
 from flask import Blueprint, current_app, request, Response
 
 from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
 from i_structures.cif_utils import cif_to_ase
+from i_data import Data_type
 
 from utils import get_data_storage, fmt_msg, key_auth, is_plain_text, html_formula, is_valid_uuid, ase_serialize
 
@@ -32,7 +35,8 @@ def create():
         return fmt_msg('Request size is invalid')
 
     if not is_plain_text(content):
-        return fmt_msg('Request contains unsupported (non-latin) characters')
+        #return fmt_msg('Request contains unsupported (non-latin) characters')
+        content = unidecode(content)
 
     fmt = detect_format(content)
 
@@ -60,12 +64,12 @@ def create():
     content = ase_serialize(ase_obj)
 
     db = get_data_storage()
-    uuid = db.put_item(formula, content, 0)
+    uuid = db.put_item(formula, content, Data_type.structure)
     db.close()
 
     return Response(json.dumps(dict(
         uuid=uuid,
-        type=0,
+        type=Data_type.structure,
         name=html_formula(formula),
     ), indent=4), content_type='application/json', status=200)
 
@@ -82,7 +86,7 @@ def listing():
         [ {object->uuid, object->type, object->name}, ... ]
     """
     uuid = request.values.get('uuid')
-    current_app.logger.warning(uuid)
+    #current_app.logger.warning(uuid)
     if not uuid:
         return fmt_msg('Empty request')
 
@@ -95,9 +99,9 @@ def listing():
 
         items = db.get_items(list(uuids))
 
-        found_uuids = set( [item['uuid'] for item in items] )
-        if found_uuids != uuids:
-            return fmt_msg('No such content', 204)
+        #found_uuids = set( [item['uuid'] for item in items] )
+        #if found_uuids != uuids:
+        #    return fmt_msg('No such content', 204)
 
     else:
         if not is_valid_uuid(uuid): return fmt_msg('Invalid request')
@@ -109,7 +113,13 @@ def listing():
 
     db.close()
 
-    items = [dict(uuid=item['uuid'], name=html_formula(item['label']), type=item['type']) for item in items]
+    items = [
+        dict(
+            uuid=item['uuid'],
+            name=html_formula(item['name']),
+            type=item['type'])
+        for item in items
+    ]
     return Response(json.dumps(items, indent=4), content_type='application/json', status=200)
 
 
