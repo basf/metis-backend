@@ -124,32 +124,38 @@ def optimade_to_ase(structure, skip_disorder=False):
     if 'data' in structure and type(structure['data']) == list and len(structure['data']):
         structure = structure['data'][0]
 
-    atom_data = []
+    elems_src, atom_data, atom_meta = [], [], {}
 
-    # try *species* attr
-    for n, specie in enumerate(structure['attributes'].get('species', [])):
+    # The field *species* might contain all the atoms,
+    # but it also might contain only the distinct atoms;
+    # in the latter case we have to link *species_at_sites* <-> *species* (TODO)
+    if 'species' in structure['attributes']:
+        for n, specie in enumerate(structure['attributes'].get('species', [])):
+            # account isotopes
+            if specie['chemical_symbols'][0] == 'D':
+                specie['chemical_symbols'][0] = 'H'
+                atom_meta[n] = 'D'
+
+            elems_src.append(specie['chemical_symbols'][0])
+
+            if not skip_disorder and len(specie['chemical_symbols']) > 1:
+                if 'concentration' not in specie:
+                    return None, "Atomic disorder data incomplete"
+
+                return None, "Structural disorder is not supported"
+
+    if len(structure['attributes']['species']) != len(structure['attributes']['cartesian_site_positions']):
+        elems_src = structure['attributes'].get('species_at_sites',
+            structure['attributes'].get('elements', [])
+        )
+
+    for n, pos in enumerate(structure['attributes']['cartesian_site_positions']):
         try:
-            atom_data.append(Atom(specie['chemical_symbols'][0], structure['attributes']['cartesian_site_positions'][n]))
-        except KeyError as exc:
-            return None, "Unrecognized atom symbol: %s" % exc
-
-        if not skip_disorder and len(specie['chemical_symbols']) > 1:
-            if 'concentration' not in specie:
-                return None, "Atomic disorder data incomplete"
-
-            return None, "Structural disorder is not supported"
-
-    # try *species_at_sites* or *elements* attr
-    if not atom_data:
-        for n, specie in enumerate(
-            structure['attributes'].get('species_at_sites',
-                structure['attributes'].get('elements', [])
+            atom_data.append(
+                Atom(extract_chemical_element(elems_src[n]), pos)
             )
-        ):
-            try:
-                atom_data.append(Atom(extract_chemical_element(specie), structure['attributes']['cartesian_site_positions'][n]))
-            except KeyError as exc:
-                return None, "Unrecognized atom symbol: %s" % exc
+        except KeyError as exc: # TODO link *species_at_sites* <-> *species*
+            return None, "Unrecognized atom symbol: %s" % exc
 
     if not atom_data:
         return None, "Atoms missing"
@@ -157,7 +163,8 @@ def optimade_to_ase(structure, skip_disorder=False):
     return Atoms(
         atom_data,
         cell=structure['attributes']['lattice_vectors'],
-        pbc=structure['attributes'].get('dimension_types') or True
+        pbc=structure['attributes'].get('dimension_types') or True,
+        info=dict(isotopes=atom_meta) if atom_meta else {}
     ), None
 
 
