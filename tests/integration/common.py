@@ -5,6 +5,15 @@ from urllib.parse import urlencode
 
 import httplib2
 
+import set_path
+from utils import API_KEY
+
+
+# see BFF server
+TEST_CREDENTIALS = {
+    'email': 'test@test.com',
+    'password': '123123'
+}
 
 req = httplib2.Http()
 
