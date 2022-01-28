@@ -28,6 +28,8 @@ def create():
     """
     Expects
         uuid: uuid
+        engine: string, one from the engines supported
+        input: {inputname: inputdata, ...}
     Returns
         JSON->error: string
         or JSON {uuid}
@@ -35,6 +37,13 @@ def create():
     uuid = request.values.get('uuid')
     if not uuid or not is_valid_uuid(uuid):
         return fmt_msg('Empty or invalid request', 400)
+
+    engine = request.values.get('engine')
+    if not engine:
+        engine = 'dummy'
+
+    if engine not in yac.engines:
+        return fmt_msg('Wrong engine requested', 400)
 
     db = get_data_storage()
     item = db.get_item(uuid)
@@ -45,9 +54,27 @@ def create():
         return fmt_msg('Wrong item requested', 400)
 
     ase_obj = ase_unserialize(item['content'])
-    submittable = setup.preprocess(ase_obj, item['name'])
+    input_files = setup.preprocess(ase_obj, engine, item['name'])
 
-    task_id = yac.queue_submit_task(item['name'], submittable, 'dummy')
+    user_input_files = request.values.get('input')
+    if user_input_files:
+        try: user_input_files = json.loads(user_input_files)
+        except Exception:
+            return fmt_msg('Invalid input definition', 400)
+        if type(user_input_files) != dict:
+            return fmt_msg('Invalid input definition', 400)
+
+        for key, value in user_input_files.items():
+            if key not in input_files:
+                return fmt_msg('Invalid input %s' % key, 400)
+
+            input_files[key] = value
+
+    for chk in yac.engines[engine]['input_files']:
+        if chk not in input_files:
+            return fmt_msg('Invalid input files', 400)
+
+    task_id = yac.queue_submit_task(item['name'], input_files, engine)
     new_uuid = db.put_item(item['name'], task_id, Data_type.calculation)
     db.close()
 
@@ -141,3 +168,23 @@ def delete():
         or JSON {uuid}
     """
     return Response('{}', content_type='application/json', status=200)
+
+
+@bp_calculations.route("/template", methods=['GET'])
+def template():
+    """
+    Expects
+        engine: string, one from the engines supported
+    Returns
+        JSON->error: string
+        or JSON {template}
+    """
+    engine = request.values.get('engine')
+    if not engine:
+        engine = 'dummy'
+
+    output = {
+        'template': setup.get_input(engine),
+        'schema': setup.get_schema(engine),
+    }
+    return Response(json.dumps(output, indent=4), content_type='application/json', status=200)
