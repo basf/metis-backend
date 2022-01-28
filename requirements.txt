@@ -1,13 +1,13 @@
 
-# Backend part
+# Networking part
 
-setuptools
 pg8000
 flask
 netius
 ujson
 httplib2
 unidecode
+sseclient-py
 
 # Scientific part
 
@@ -17,5 +17,4 @@ scipy == 1.5.4
 ase
 pycodcif
 spglib
-optimade
 git+https://github.com/tilde-lab/yascheduler
