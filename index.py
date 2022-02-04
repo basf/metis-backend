@@ -12,15 +12,6 @@ app.debug = True
 app.register_blueprint(bp_data)
 app.register_blueprint(bp_calculations)
 
-
-@app.after_request
-def add_service_headers(response):
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
-
-
 if __name__ == '__main__':
 
     # production server
