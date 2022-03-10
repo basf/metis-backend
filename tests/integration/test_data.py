@@ -1,6 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
-NB curl -XPOST -HKey:... http://localhost:7070/data/create -d 'content={"attributes":{"immutable_id":"x","species":[{"chemical_symbols":["Au"]}],"cartesian_site_positions":[[0,0,0]],"lattice_vectors":[[0,2,2],[2,0,2],[2,2,0]]}}'
+NB
+curl -XPOST -HKey:... http://localhost:7070/data/create -d 'content={"attributes":{"immutable_id":"x","species":[{"chemical_symbols":["Au"]}],"cartesian_site_positions":[[0,0,0]],"lattice_vectors":[[0,2,2],[2,0,2],[2,2,0]]}}'
+
+curl -XPOST -HKey:... http://localhost:7070/calculations/create -d 'engine=dummy,uuid=0ee24493-5f4a-41f6-a5d7-171e408f4048'
 """
 import sys
 
