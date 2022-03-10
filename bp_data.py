@@ -54,7 +54,7 @@ def create():
     if error: return fmt_msg(error)
 
     if 'disordered' in ase_obj.info:
-        return fmt_msg('Structural disorder is not supported')
+        return fmt_msg('Structural disorder is currently not supported')
 
     ase_obj, error = refine(ase_obj, conventional_cell=True)
     if error:
