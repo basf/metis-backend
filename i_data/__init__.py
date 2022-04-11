@@ -59,6 +59,19 @@ class Data_storage(object):
         return [dict(uuid=str(row[0]), name=row[1], content=row[2], type=row[3]) for row in self.cursor.fetchall()]
 
 
+    def search_item(self, content):
+        self.cursor.execute(
+            "SELECT item_id, name, content, type FROM {db_table} WHERE content = '{content}';".format(
+                db_table=DB_TABLE, content=content
+            )
+        )
+        row = self.cursor.fetchone()
+        if not row:
+            return False
+
+        return dict(uuid=str(row[0]), name=row[1], content=row[2], type=row[3])
+
+
     def drop_item(self, uuid):
         if self.get_item(uuid):
             self.cursor.execute("DELETE FROM {db_table} WHERE item_id = '{uuid}';".format(db_table=DB_TABLE, uuid=uuid))
