@@ -1,6 +1,7 @@
 #!/bin/bash
+set -euo pipefail
 
-PG_VERSION="14.1" # NB subject to update
+PG_VERSION="14.2" # NB subject to update
 PG_SOURCE_ADDR=https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.gz
 
 SETTINGS=(
@@ -53,7 +54,6 @@ su postgres -c "/data/pg/bin/initdb -D /data/pg/db"
 su postgres -c "/data/pg/bin/pg_ctl -D /data/pg/db -l /tmp/logfile start"
 su postgres -c "/data/pg/bin/createdb aiidadb"
 
-chown -R postgres:postgres /data/pg
 cd $(dirname $0)
 cp postgresql.conf /data/pg/db/
 cp supervisord.conf /etc/supervisor/
