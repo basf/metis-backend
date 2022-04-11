@@ -4,11 +4,11 @@ import json
 from configparser import ConfigParser
 
 from flask import Blueprint, current_app, request, Response
-
+import requests
 from yascheduler import CONFIG_FILE
 from yascheduler.scheduler import Yascheduler
 
-from utils import get_data_storage, fmt_msg, key_auth, html_formula, is_valid_uuid, ase_unserialize
+from utils import get_data_storage, fmt_msg, key_auth, webhook_auth, html_formula, is_valid_uuid, ase_unserialize, WEBHOOK_KEY, WEBHOOK_CALC_UPDATE
 from i_calculations import Calc_setup
 from i_data import Data_type
 
@@ -54,7 +54,7 @@ def create():
         return fmt_msg('Wrong item requested', 400)
 
     ase_obj = ase_unserialize(item['content'])
-    input_files = setup.preprocess(ase_obj, engine, item['name'])
+    input_data = setup.preprocess(ase_obj, engine, item['name'])
 
     user_input_files = request.values.get('input')
     if user_input_files:
@@ -65,16 +65,18 @@ def create():
             return fmt_msg('Invalid input definition', 400)
 
         for key, value in user_input_files.items():
-            if key not in input_files:
+            if key not in input_data:
                 return fmt_msg('Invalid input %s' % key, 400)
 
-            input_files[key] = value
+            input_data[key] = value
 
     for chk in yac.engines[engine]['input_files']:
-        if chk not in input_files:
+        if chk not in input_data:
             return fmt_msg('Invalid input files', 400)
 
-    task_id = yac.queue_submit_task(item['name'], input_files, engine)
+    input_data['webhook_url'] = 'http://' + request.host + '/calculations/update?Key=' + WEBHOOK_KEY # TODO setup host in config
+
+    task_id = yac.queue_submit_task(item['name'], input_data, engine)
     new_uuid = db.put_item(item['name'], task_id, Data_type.calculation)
     db.close()
 
@@ -143,8 +145,9 @@ def status():
             progress = 50
 
         else:
-            progress = 100
             db.drop_item(uuid)
+            progress = 100
+            # TODO results parsing here
 
         results.append(dict(
             uuid=uuid,
@@ -155,6 +158,41 @@ def status():
 
     db.close()
     return Response(json.dumps(results, indent=4), content_type='application/json', status=200)
+
+
+@bp_calculations.route("/update", methods=['POST'])
+@webhook_auth
+def update():
+    """
+    A scheduler webhooks handler, being a proxy to the user interface
+    Expects
+        task_id: int
+        status: int
+    Returns
+        no content
+    """
+    task_id = request.values.get('task_id')
+    status = request.values.get('status')
+
+    db = get_data_storage()
+    item = db.search_item(task_id)
+    if item:
+
+        if status == yac.STATUS_DONE:
+
+            db.drop_item(item['uuid'])
+            progress = 100
+            # TODO results parsing here
+
+        else:
+            progress = 50
+
+        # here no response is required
+        # TODO status vs. progress
+        try: requests.post(WEBHOOK_CALC_UPDATE, data={'uuid': item['uuid'], 'status': progress}, timeout=0.5)
+        except requests.exceptions.ReadTimeout: pass
+
+    return Response('', status=204)
 
 
 @bp_calculations.route("/delete", methods=['POST'])

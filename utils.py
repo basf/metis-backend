@@ -16,7 +16,9 @@ assert os.path.exists(CONFIG_PATH)
 config = ConfigParser()
 config.read(CONFIG_PATH)
 
-API_KEY = config.get('api', 'key')
+API_KEY =             config.get('api', 'key')
+WEBHOOK_KEY =         config.get('webhooks', 'key')
+WEBHOOK_CALC_UPDATE = config.get('webhooks', 'calc_update')
 
 
 def get_data_storage():
@@ -27,12 +29,27 @@ def get_data_storage():
 
 def key_auth(f):
     """
-    Flask decorator
+    Flask auth decorator
     """
     @wraps(f)
     def decorated(*args, **kwargs):
         key = request.headers.get('Key')
         if key == API_KEY:
+            return f(*args, **kwargs)
+
+        return fmt_msg('Unauthorized', 401)
+
+    return decorated
+
+
+def webhook_auth(f):
+    """
+    Another auth decorator
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        key = request.values.get('Key')
+        if key == WEBHOOK_KEY:
             return f(*args, **kwargs)
 
         return fmt_msg('Unauthorized', 401)
