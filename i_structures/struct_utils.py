@@ -60,8 +60,7 @@ def poscar_to_ase(poscar_string):
 
 def json_to_ase(datarow):
     """
-    An extended *mpds_client* static *compile_crystal* method
-    for handling the disordered structures
+    Handling the disordered structures
     in an oversimplified, very narrow-purpose way
 
     TODO?

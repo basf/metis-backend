@@ -15,7 +15,7 @@ if not INCL_PATH in sys.path:
 from i_structures.topas import ase_to_topas
 
 
-class Calc_setup(object):
+class Calc_setup:
 
     schemata = {}
     templates = {}

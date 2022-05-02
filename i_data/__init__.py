@@ -5,13 +5,13 @@ import pg8000
 DB_TABLE = 'bscience_data_items'
 
 
-class Data_type(object):
+class Data_type:
     structure = 1
     calculation = 2
     property = 3
 
 
-class Data_storage(object):
+class Data_storage:
 
     def __init__(self, user, password, database, host, port=5432):
 

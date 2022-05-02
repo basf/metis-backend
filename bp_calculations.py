@@ -70,7 +70,7 @@ def create():
 
             input_data[key] = value
 
-    for chk in yac.engines[engine]['input_files']:
+    for chk in yac.engines[engine].input_files:
         if chk not in input_data:
             return fmt_msg('Invalid input files', 400)
 

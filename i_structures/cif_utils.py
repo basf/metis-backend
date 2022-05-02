@@ -120,24 +120,13 @@ def cif_to_ase(cif_string):
         return None, 'Unrecognized sites or invalid site symmetry in CIF'
 
 
-def ase_to_eq_cif(ase_obj, supply_sg=True, mpds_labs_loop=None):
+def ase_to_eq_cif(ase_obj, supply_sg=True):
     """
     From ASE object generate CIF
     with symmetry-equivalent atoms;
     augment with the aux info, if needed
     """
-    cif_data  = 'data_mpds_labs\n'
-
-    if type(mpds_labs_loop) == list:
-        cif_data += '\n_mpds_prediction_quality %s/%s' % (mpds_labs_loop[0], len(mpds_labs_loop) - 1) + "\n"
-        cif_data += '\nloop_' + "\n"
-        cif_data += ' _mpds_labs_property' + "\n"
-        cif_data += ' _user_requested_min' + "\n"
-        cif_data += ' _mpds_labs_value' + "\n"
-        cif_data += ' _user_requested_max' + "\n"
-        cif_data += ' _mpds_labs_units' + "\n"
-        for deck in mpds_labs_loop[1:]:
-            cif_data += " '" + "' '".join(map(str, deck)) + "'\n"
+    cif_data  = 'data_project_metis\n'
 
     parameters = cell_to_cellpar(ase_obj.cell)
     cif_data += '_cell_length_a    ' + "%2.6f" % parameters[0] + "\n"
