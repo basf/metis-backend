@@ -188,8 +188,7 @@ def update():
             progress = 50
 
         # here no response is required
-        # TODO status vs. progress
-        try: requests.post(WEBHOOK_CALC_UPDATE, data={'uuid': item['uuid'], 'status': progress}, timeout=0.5)
+        try: requests.post(WEBHOOK_CALC_UPDATE, data={'uuid': item['uuid'], 'progress': progress}, timeout=0.5)
         except requests.exceptions.ReadTimeout: pass
 
     return Response('', status=204)
