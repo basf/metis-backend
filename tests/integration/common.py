@@ -11,7 +11,7 @@ from utils import API_KEY
 
 # see BFF server
 TEST_CREDENTIALS = {
-    'email': 'test@test.com',
+    'email': 'member@test.com',
     'password': '123123'
 }
 
@@ -28,7 +28,8 @@ def make_request(url, data, httpverb='GET', headers={}):
         headers.update({'Content-type': 'application/x-www-form-urlencoded'})
         response, content = req.request(url, httpverb, headers=headers, body=urlencode(data))
 
-    if math.floor(response.status / 100) != 2: raise RuntimeError( "HTTP error %s: %s" % (response.status, content) )
+    if math.floor(response.status / 100) != 2:
+        raise RuntimeError( "HTTP error %s: %s" % (response.status, content) )
 
     if not content:
         content = '{}'

@@ -13,9 +13,15 @@ from utils import API_KEY
 
 
 host = 'http://localhost:7070'
-#host = 'https://peer.basf.science/v0'
+#host = 'https://peer.metis.science/v0'
+#API_KEY = '' # in case of production server
 
 content = open(sys.argv[1]).read()
 
 _, answer = make_request(host + '/data/create', {'content': content}, 'POST', headers={'Key': API_KEY})
 print(answer)
+print('='*100 + 'Data uploaded correctly')
+
+_, answer = make_request(host + '/calculations/create', {'uuid': answer['uuid']}, 'POST', headers={'Key': API_KEY})
+print(answer)
+print('='*100 + 'Calc started correctly')
