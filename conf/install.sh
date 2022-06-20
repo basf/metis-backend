@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PG_VERSION="14.2" # NB subject to update
+PG_VERSION="14.3" # NB subject to update
 PG_SOURCE_ADDR=https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.gz
 
 SETTINGS=(
