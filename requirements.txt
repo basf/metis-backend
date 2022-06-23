@@ -18,3 +18,5 @@ ase
 pycodcif
 spglib
 git+https://github.com/tilde-lab/yascheduler
+aiida-core == 1.6.8
+git+https://github.com/tilde-lab/aiida-crystal-dft
