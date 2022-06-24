@@ -3,7 +3,7 @@ import random
 import json
 from configparser import ConfigParser
 
-from flask import Blueprint, current_app, request, Response
+from flask import Blueprint, current_app, request, abort, Response
 import requests
 from yascheduler import CONFIG_FILE
 from yascheduler.scheduler import Yascheduler
@@ -28,7 +28,7 @@ def create():
     """
     Expects
         uuid: uuid
-        engine: string, one from the engines supported
+        engine: string, one from the scheduler engines supported
         input: {inputname: inputdata, ...}
     Returns
         JSON->error: string
@@ -54,13 +54,14 @@ def create():
         return fmt_msg('Wrong item requested', 400)
 
     ase_obj = ase_unserialize(item['content'])
-    input_data = setup.preprocess(ase_obj, engine, item['name'])
+    input_data = setup.preprocess(ase_obj, engine, item['metadata']['name'])
 
     user_input_files = request.values.get('input')
     if user_input_files:
         try: user_input_files = json.loads(user_input_files)
         except Exception:
             return fmt_msg('Invalid input definition', 400)
+
         if type(user_input_files) != dict:
             return fmt_msg('Invalid input definition', 400)
 
@@ -74,10 +75,15 @@ def create():
         if chk not in input_data:
             return fmt_msg('Invalid input files', 400)
 
-    input_data['webhook_url'] = 'http://' + request.host + '/calculations/update?Key=' + WEBHOOK_KEY # TODO setup host in config
+    # TODO define in config
+    input_data['webhook_url'] = 'http://' + request.host + '/calculations/update?Key=' + WEBHOOK_KEY
 
-    task_id = yac.queue_submit_task(item['name'], input_data, engine)
-    new_uuid = db.put_item(item['name'], task_id, Data_type.calculation)
+    task_id = yac.queue_submit_task(item['metadata']['name'], input_data, engine)
+    new_uuid = db.put_item(
+        dict(name=item['metadata']['name'], engine=engine, parent=uuid),
+        task_id,
+        Data_type.calculation
+    )
     db.close()
 
     return Response(json.dumps(dict(uuid=new_uuid), indent=4), content_type='application/json', status=200)
@@ -136,7 +142,7 @@ def status():
             return fmt_msg('Internal error, task(s) lost', 500)
 
         uuid = found[0]['uuid']
-        name = found[0]['name']
+        name = found[0]['metadata']['name']
 
         if task['status'] == yac.STATUS_TO_DO:
             progress = 25
@@ -145,9 +151,12 @@ def status():
             progress = 50
 
         else:
-            db.drop_item(uuid)
+            parent = found[0]['metadata']['parent']
+            if not db.get_sources(parent):
+                # Should we handle results here? TODO?
+                current_app.logger.critical('Internal error, listing precedes hook')
+
             progress = 100
-            # TODO results parsing here
 
         results.append(dict(
             uuid=uuid,
@@ -164,7 +173,8 @@ def status():
 @webhook_auth
 def update():
     """
-    A scheduler webhooks handler, being a proxy to the user interface
+    A scheduler webhooks handler, being a proxy to BFF and GUI
+    Currently this is the only way to transition calcs in BFF (TODO?)
     Expects
         task_id: int
         status: int
@@ -174,23 +184,45 @@ def update():
     task_id = request.values.get('task_id')
     status = request.values.get('status')
 
+    if not task_id or not status:
+        abort(400)
+    try: status = int(status)
+    except ValueError: abort(400)
+
     db = get_data_storage()
     item = db.search_item(task_id)
     if item:
+        assert item['type'] == Data_type.calculation
+        result = None
 
         if status == yac.STATUS_DONE:
 
-            db.drop_item(item['uuid'])
-            progress = 100
-            # TODO results parsing here
+            error = None
+            if not db.get_sources(item['metadata']['parent']):
+                result, error = process_calc(db, item, task_id)
 
-        else:
-            progress = 50
+            if error:
+                current_app.logger.error(error)
+            else:
+                current_app.logger.warning('Successfully processed calc %s and linked %s -> %s' % (
+                    task_id, result['parent'], result['uuid']))
+
+            progress = 100
+
+        else: progress = 50
+
+        if result: result = [result]
 
         # here no response is required
-        try: requests.post(WEBHOOK_CALC_UPDATE, data={'uuid': item['uuid'], 'progress': progress}, timeout=0.5)
-        except requests.exceptions.ReadTimeout: pass
+        try:
+            requests.post(WEBHOOK_CALC_UPDATE, json={'uuid': item['uuid'], 'progress': progress, 'result': result}, timeout=0.5)
+        except Exception:
+            if result:
+                current_app.logger.critical('Internal error, calc %s not delivered and lost' % task_id)
 
+    else: current_app.logger.error('No calc for task %s' % task_id)
+
+    db.close()
     return Response('', status=204)
 
 
@@ -204,6 +236,7 @@ def delete():
         JSON->error: string
         or JSON {uuid}
     """
+    #raise NotImplementedError
     return Response('{}', content_type='application/json', status=200)
 
 
@@ -225,3 +258,28 @@ def template():
         'schema': setup.get_schema(engine),
     }
     return Response(json.dumps(output, indent=4), content_type='application/json', status=200)
+
+
+def process_calc(db, calc_row, scheduler_id):
+
+    import os
+
+    ready_task = yac.queue_get_task(scheduler_id) or {}
+    local_folder = ready_task.get('metadata', {}).get('local_folder')
+
+    if local_folder and os.path.exists(local_folder):
+        output, error = setup.postprocess(calc_row['metadata']['engine'], local_folder)
+    else:
+        output, error = None, 'No calculation results exist'
+
+    if error:
+        return None, error
+
+    output['metadata']['name'] = calc_row['metadata']['name'] + ' result'
+    new_uuid = db.put_item(output['metadata'], output['content'], output['type'])
+    result = {'uuid': new_uuid, 'parent': calc_row['metadata']['parent']}
+
+    db.put_link(calc_row['metadata']['parent'], new_uuid)
+    db.drop_item(calc_row['uuid'])
+
+    return result, None

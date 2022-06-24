@@ -1,9 +1,17 @@
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE TABLE bscience_data_items (
+CREATE TABLE backend_data_nodes (
     item_id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(256),
+    metadata jsonb,
     content VARCHAR,
     type SMALLINT
+);
+
+CREATE TABLE backend_data_links (
+    source_id UUID NOT NULL,
+    target_id UUID NOT NULL,
+    PRIMARY KEY(source_id, target_id),
+    FOREIGN KEY (source_id) REFERENCES backend_data_nodes (item_id),
+    FOREIGN KEY (target_id) REFERENCES backend_data_nodes (item_id)
 );

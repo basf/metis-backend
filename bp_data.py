@@ -64,11 +64,11 @@ def create():
     content = ase_serialize(ase_obj)
 
     db = get_data_storage()
-    uuid = db.put_item(formula, content, Data_type.structure)
+    new_uuid = db.put_item(dict(name=formula), content, Data_type.structure)
     db.close()
 
     return Response(json.dumps(dict(
-        uuid=uuid,
+        uuid=new_uuid,
         type=Data_type.structure,
         name=html_formula(formula),
     ), indent=4), content_type='application/json', status=200)
@@ -116,9 +116,9 @@ def listing():
     items = [
         dict(
             uuid=item['uuid'],
-            name=html_formula(item['name']),
-            type=item['type'])
-        for item in items
+            name=html_formula(item['metadata']['name']),
+            type=item['type']
+        ) for item in items
     ]
     return Response(json.dumps(items, indent=4), content_type='application/json', status=200)
 

@@ -22,6 +22,9 @@ WEBHOOK_CALC_UPDATE = config.get('webhooks', 'calc_update')
 
 
 def get_data_storage():
+    """
+    Persistence layer, to be used throughout the codebase
+    """
     return Data_storage(
         **dict(config.items('db'))
     )

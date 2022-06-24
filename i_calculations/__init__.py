@@ -1,7 +1,10 @@
 
+import os
 import sys
-import os.path
 import json
+
+from i_calculations.pcrystal import Pcrystal_setup
+from i_calculations.topas import check_xrpd
 
 INCL_PATH = os.path.realpath(os.path.normpath(
     os.path.join(
@@ -12,6 +15,7 @@ INCL_PATH = os.path.realpath(os.path.normpath(
 if not INCL_PATH in sys.path:
     sys.path.insert(0, INCL_PATH)
 
+from i_data import Data_type
 from i_structures.topas import ase_to_topas
 
 
@@ -20,7 +24,7 @@ class Calc_setup:
     schemata = {}
     templates = {}
 
-    for engine in ['topas', 'dummy']:
+    for engine in ['topas', 'pcrystal', 'dummy']:
 
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "schemata/%s.json" % engine), 'r') as f:
             schemata[engine] = json.loads(f.read())
@@ -28,35 +32,91 @@ class Calc_setup:
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates/%s.tpl" % engine), 'r') as f:
             templates[engine] = f.read()
 
+
     def __init__(self):
-        """
-        """
+        pass
+
 
     def get_input(self, engine):
         return Calc_setup.templates.get(engine,
             Calc_setup.templates['dummy'])
 
+
     def get_schema(self, engine):
         return Calc_setup.schemata.get(engine,
             Calc_setup.schemata['dummy'])
+
 
     def preprocess(self, ase_obj, engine, name):
 
         if engine == 'topas':
             return {
-                'input.pro': self.get_input(engine),
+                'calc.inp': self.get_input(engine),
                 'structure.inc': ase_to_topas(ase_obj),
+            }
+
+        elif engine == 'pcrystal':
+
+            setup = Pcrystal_setup(ase_obj)
+            return {
+                'INPUT': setup.get_input_setup(name),
+                'fort.34': setup.get_input_struct(),
             }
 
         else:
             return {
                 '1.input': self.get_input('dummy'),
-                '2.input': self.get_input('dummy'),
-                '3.input': ase_to_topas(ase_obj),
+                '2.input': self.get_input('dummy') * 2,
+                '3.input': self.get_input('dummy') * 3,
             }
+
+
+    def postprocess(self, engine, data_folder):
+
+        output = dict(metadata={}, content=None, type=Data_type.property)
+
+        parsers = {
+            'topas': check_xrpd,
+            'pcrystal': Pcrystal_setup.parse,
+        }
+        default_parser = lambda x: {'value': 42}
+        parser = parsers.get(engine, default_parser)
+        main_file_asset = None
+
+        for item in os.listdir(data_folder):
+
+            item_path = os.path.join(data_folder, item)
+            if not os.path.isfile(item_path):
+                continue
+            result = parser(item_path)
+            if not result:
+                continue
+            main_file_asset = item_path
+            break
+        else:
+            return None, 'Cannot find any results'
+
+        output['content'] = result['value']
+        output['metadata']['path'] = main_file_asset
+
+        if result.get('structure'):
+            output['type'] = Data_type.structure
+            output['metadata']['structure'] = result['structure']
+
+        return output, None
 
 
 if __name__ == "__main__":
 
+    from ase.spacegroup import crystal
+
+    #test_obj = crystal(
+    #    ('Sr', 'Ti', 'O', 'O'),
+    #    basis=[(0, 0.5, 0.25), (0, 0, 0), (0, 0, 0.25), (0.255, 0.755, 0)],
+    #    spacegroup=140, cellpar=[5.511, 5.511, 7.796, 90, 90, 90], primitive_cell=True
+    #)
+
     setup = Calc_setup()
-    print(setup.get_input('hello'))
+    #print(setup.get_input('hi'))
+    #print(setup.preprocess(test_obj, 'topas', 'Metis test'))
+    print(setup.postprocess('pcrystal', sys.argv[1]))
