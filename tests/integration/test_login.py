@@ -18,4 +18,8 @@ print('='*100 + 'Authorized correctly')
 
 #_, answer = make_request(host + '/datasources', {}, 'GET', headers={'Cookie': user_session})
 #print(answer)
-#print('='*100 + 'Data loaded correctly')
+#print('='*100 + 'Data requested')
+
+#_, answer = make_request(host + '/calculations', {'dataId': 22, 'workflow': 'workflow'}, 'POST', headers={'Cookie': user_session})
+#print(answer)
+#print('='*100 + 'Calc requested')

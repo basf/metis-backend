@@ -17,6 +17,6 @@ print('='*100 + 'Authorized correctly')
 
 _, answer = make_request(bff_host + '/datasources', {'content': content}, 'POST', headers={'Cookie': user_session})
 print(answer)
-print('='*100 + 'Data uploaded correctly')
+print('='*100 + 'Data upload requested')
 
-# NB to initiate calc we have to contact SSE
+# NB we have to accept SSE to make further processing

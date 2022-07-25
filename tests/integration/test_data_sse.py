@@ -48,7 +48,7 @@ client = sseclient.SSEClient(response)
 for event in client.events():
     answer = json.loads(event.data)
 
-    print("SSE" + "=" * 100)
+    print("=" * 100)
     print(answer)
     assert len(answer['data'])
 
