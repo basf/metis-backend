@@ -3,34 +3,5 @@
   "description": "Sample schema for calculations (WIP)",
   "type": "object",
   "additionalProperties": true,
-  "properties": {
-    "r_exp": {
-      "type": "number",
-      "properties": {}
-    },
-    "r_exp_dash": {
-      "type": "number",
-      "properties": {}
-    },
-    "r_wp": {
-      "type": "number",
-      "properties": {}
-    },
-    "r_wp_dash": {
-      "type": "number",
-      "properties": {}
-    },
-    "r_p": {
-      "type": "number",
-      "properties": {}
-    },
-    "r_p_dash": {
-      "type": "number",
-      "properties": {}
-    },
-    "axial_conv": {
-      "type": "object",
-      "properties": {}
-    }
-  }
+  "properties": {}
 }

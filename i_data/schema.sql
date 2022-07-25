@@ -5,7 +5,8 @@ CREATE TABLE backend_data_nodes (
     item_id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
     metadata jsonb,
     content VARCHAR,
-    type SMALLINT
+    type SMALLINT,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE backend_data_links (
