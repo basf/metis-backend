@@ -12,6 +12,7 @@ class Data_type:
     structure = 1
     calculation = 2
     property = 3
+    workflow = 4
 
 
 class Data_storage:

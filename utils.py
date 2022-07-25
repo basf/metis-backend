@@ -19,6 +19,7 @@ config.read(CONFIG_PATH)
 API_KEY =             config.get('api', 'key')
 WEBHOOK_KEY =         config.get('webhooks', 'key')
 WEBHOOK_CALC_UPDATE = config.get('webhooks', 'calc_update')
+WEBHOOK_CALC_CREATE = config.get('webhooks', 'calc_create')
 
 
 def get_data_storage():
