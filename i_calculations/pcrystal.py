@@ -11,8 +11,11 @@ from aiida_crystal_dft.io.basis import BasisFile # NB only used to determine ecp
 
 from pycrystal import CRYSTOUT
 
+from i_data import Data_type
+from utils import config, ase_serialize
 
-ELS_REPO_DIR = "/home/eb/mpds-aiida/MPDSBSL_NEUTRAL_6TH"
+
+ELS_REPO_DIR = config.get('local', 'pcrystal_bs_path', fallback='/tmp')
 
 TEMPLATE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "templates/pcrystal"
@@ -87,6 +90,14 @@ class Pcrystal_setup:
         self.els = list(set(self.ase_obj.get_chemical_symbols()))
 
 
+    def validate(self):
+        for el in self.els:
+            if el not in Pcrystal_setup.els_repo:
+                return f"Element {el} is not supported"
+
+        return None
+
+
     def get_input_struct(self):
         f34_input = Fort34([Pcrystal_setup.els_repo[el] for el in self.els])
         return str(f34_input.from_ase(self.ase_obj))
@@ -107,9 +118,13 @@ class Pcrystal_setup:
             return False
 
         result = CRYSTOUT(resource)
-        output = {}
-        output['value'] = result.info['energy']
+        output = {'type': Data_type.property}
+
         if result.info['optgeom']:
-            output['structure'] = result.info['structures'][-1]
+            output['content'] = ase_serialize(result.info['structures'][-1])
+            output['type'] = Data_type.structure
+
+        else:
+            output['content'] = result.info['energy']
 
         return output

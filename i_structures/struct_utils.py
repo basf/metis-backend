@@ -120,6 +120,9 @@ def optimade_to_ase(structure, skip_disorder=False):
     if type(structure) == str:
         structure = json.loads(structure)
 
+    #if 'cartesian_site_positions' not in structure['attributes'] or 'lattice_vectors' not in structure['attributes']:
+    #    return None, "Invalid structure"
+
     if 'data' in structure and type(structure['data']) == list and len(structure['data']):
         structure = structure['data'][0]
 
@@ -129,7 +132,7 @@ def optimade_to_ase(structure, skip_disorder=False):
     # but it also might contain only the distinct atoms;
     # in the latter case we have to link *species_at_sites* <-> *species* (TODO)
     if 'species' in structure['attributes']:
-        for n, specie in enumerate(structure['attributes'].get('species', [])):
+        for n, specie in enumerate(structure['attributes']['species']):
             # account isotopes
             if specie['chemical_symbols'][0] == 'D':
                 specie['chemical_symbols'][0] = 'H'
@@ -143,7 +146,7 @@ def optimade_to_ase(structure, skip_disorder=False):
 
                 return None, "Structural disorder is not supported"
 
-    if len(structure['attributes']['species']) != len(structure['attributes']['cartesian_site_positions']):
+    if len(structure['attributes'].get('species', [])) != len(structure['attributes']['cartesian_site_positions']):
         elems_src = structure['attributes'].get('species_at_sites',
             structure['attributes'].get('elements', [])
         )

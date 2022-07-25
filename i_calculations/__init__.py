@@ -3,20 +3,19 @@ import os
 import sys
 import json
 
+from yascheduler.scheduler import Yascheduler
+
 from i_calculations.pcrystal import Pcrystal_setup
 from i_calculations.topas import check_xrpd
-
-INCL_PATH = os.path.realpath(os.path.normpath(
-    os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "../"
-    )
-))
-if not INCL_PATH in sys.path:
-    sys.path.insert(0, INCL_PATH)
-
 from i_data import Data_type
 from i_structures.topas import ase_to_topas
+
+
+_scheduler_status_mapping = {
+    Yascheduler.STATUS_TO_DO:   25,
+    Yascheduler.STATUS_RUNNING: 50,
+    Yascheduler.STATUS_DONE:    100,
+}
 
 
 class Calc_setup:
@@ -49,8 +48,10 @@ class Calc_setup:
 
     def preprocess(self, ase_obj, engine, name):
 
+        error = None
+
         if engine == 'topas':
-            return {
+            result = {
                 'calc.inp': self.get_input(engine),
                 'structure.inc': ase_to_topas(ase_obj),
             }
@@ -58,17 +59,23 @@ class Calc_setup:
         elif engine == 'pcrystal':
 
             setup = Pcrystal_setup(ase_obj)
-            return {
+            error = setup.validate()
+            if error:
+                return None, error
+
+            result = {
                 'INPUT': setup.get_input_setup(name),
                 'fort.34': setup.get_input_struct(),
             }
 
         else:
-            return {
+            result = {
                 '1.input': self.get_input('dummy'),
                 '2.input': self.get_input('dummy') * 2,
                 '3.input': self.get_input('dummy') * 3,
             }
+
+        return result, error
 
 
     def postprocess(self, engine, data_folder):
@@ -79,7 +86,7 @@ class Calc_setup:
             'topas': check_xrpd,
             'pcrystal': Pcrystal_setup.parse,
         }
-        default_parser = lambda x: {'value': 42}
+        default_parser = lambda x: {'content': 42}
         parser = parsers.get(engine, default_parser)
         main_file_asset = None
 
@@ -88,20 +95,21 @@ class Calc_setup:
             item_path = os.path.join(data_folder, item)
             if not os.path.isfile(item_path):
                 continue
+
             result = parser(item_path)
             if not result:
                 continue
+
             main_file_asset = item_path
             break
+
         else:
             return None, 'Cannot find any results'
 
-        output['content'] = result['value']
         output['metadata']['path'] = main_file_asset
-
-        if result.get('structure'):
-            output['type'] = Data_type.structure
-            output['metadata']['structure'] = result['structure']
+        output['content'] = result['content']
+        if result.get('type'):
+            output['type'] = result['type']
 
         return output, None
 
