@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
 NB
-curl -XPOST -HKey:... http://localhost:7070/data/create -d 'content={"attributes":{"immutable_id":"x","species":[{"chemical_symbols":["Au"]}],"cartesian_site_positions":[[0,0,0]],"lattice_vectors":[[0,2,2],[2,0,2],[2,2,0]]}}'
+curl -XPOST -HKey:... http://localhost:7050/data/create -d 'content={"attributes":{"immutable_id":"x","species":[{"chemical_symbols":["Au"]}],"cartesian_site_positions":[[0,0,0]],"lattice_vectors":[[0,2,2],[2,0,2],[2,2,0]]}}'
 
-curl -XPOST -HKey:... http://localhost:7070/calculations/create -d 'engine=dummy&uuid=0ee24493-5f4a-41f6-a5d7-171e408f4048'
+curl -XPOST -HKey:... http://localhost:7050/calculations/create -d 'engine=dummy&uuid=0ee24493-5f4a-41f6-a5d7-171e408f4048'
 """
 import sys
 
@@ -12,7 +12,7 @@ import set_path
 from utils import API_KEY
 
 
-host = 'http://localhost:7070'
+host = 'http://localhost:7050'
 #host = 'https://peer.metis.science/v0'
 #API_KEY = '' # in case of production server
 
