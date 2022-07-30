@@ -1,12 +1,10 @@
 
 import random
 import json
-from configparser import ConfigParser
 
 from flask import Blueprint, current_app, request, abort, Response
 import requests
-from yascheduler import CONFIG_FILE
-from yascheduler.scheduler import Yascheduler
+from yascheduler import Yascheduler
 
 from utils import (
     get_data_storage, fmt_msg, key_auth, webhook_auth, html_formula, is_valid_uuid, ase_unserialize,
@@ -19,9 +17,7 @@ from i_data import Data_type
 
 bp_calculations = Blueprint('calculations', __name__, url_prefix='/calculations')
 
-config = ConfigParser()
-config.read(CONFIG_FILE)
-yac = Yascheduler(config)
+yac = Yascheduler()
 
 setup = Calc_setup()
 

@@ -3,7 +3,7 @@ import os
 import sys
 import json
 
-from yascheduler.scheduler import Yascheduler
+from yascheduler import Yascheduler
 
 from i_calculations.pcrystal import Pcrystal_setup
 from i_calculations.topas import check_xrpd
