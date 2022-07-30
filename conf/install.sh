@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PG_VERSION="14.3" # NB subject to update
+PG_VERSION="14.4" # NB subject to update
 PG_SOURCE_ADDR=https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.gz
 
 SETTINGS=(
@@ -15,10 +15,9 @@ for ((i=0; i<${#SETTINGS[@]}; i++)); do
     fi
 done
 
-
 apt-get -y update && apt-get -y upgrade
 update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-apt-get -y install build-essential nginx libatlas-base-dev libopenblas-dev libblas-dev libffi-dev libreadline6-dev zlib1g-dev liblapack-dev supervisor python3-dev python3-pip python3-numpy python3-scipy python3-matplotlib p7zip-full git swig python3-setuptools pkg-config
+apt-get -y install build-essential nginx rabbitmq-server libatlas-base-dev libopenblas-dev libblas-dev libffi-dev libreadline6-dev zlib1g-dev liblapack-dev supervisor python3-dev python3-pip python3-numpy python3-scipy python3-matplotlib p7zip-full git swig python3-setuptools pkg-config
 
 update-rc.d supervisor defaults
 update-rc.d supervisor enable
@@ -52,9 +51,14 @@ PG_CONFIG=/data/pg/bin/pg_config make install
 
 su postgres -c "/data/pg/bin/initdb -D /data/pg/db"
 su postgres -c "/data/pg/bin/pg_ctl -D /data/pg/db -l /tmp/logfile start"
-su postgres -c "/data/pg/bin/createdb aiidadb"
+su postgres -c "/data/pg/bin/createdb metis"
+
+# Other preparations
 
 cd $(dirname $0)
 cp postgresql.conf /data/pg/db/
 cp supervisord.conf /etc/supervisor/
 cp env.ini.sample env.ini
+
+systemctl stop nginx
+systemctl disable nginx
