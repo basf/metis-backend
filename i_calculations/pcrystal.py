@@ -47,7 +47,7 @@ def get_basis_sets(repo_dir=ELS_REPO_DIR):
     return bs_repo
 
 
-def get_template(template='minimal.yml'):
+def get_template(template='demo.yml'):
     """
     Templates present the permanent calc setup
     """
@@ -67,7 +67,7 @@ def get_input(calc_params_crystal, elements, bs_src, label):
     """
     Generates a program input
     """
-    calc_params_crystal['title'] = label
+    calc_params_crystal['label'] = label
 
     if isinstance(bs_src, dict):
         return D12(parameters=calc_params_crystal, basis=[bs_src[el] for el in elements])

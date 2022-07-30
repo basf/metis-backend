@@ -18,11 +18,6 @@ default:
       numerical:
         TOLDEE: 7
       post_scf: ['PPAN']
-    geometry:
-      optimise:
-        type: CELLONLY
-        convergence:
-          TOLDEE: 7
 
   properties:
     band:

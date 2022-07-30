@@ -87,11 +87,14 @@ def create():
             return fmt_msg('Invalid input files', 400)
 
     if workflow:
+        # TODO input_data unused
         meta = {
-            'engine': engine,
             'name': node['metadata']['name'],
         }
-        aiida_wf_node = Workflow_setup.submit(input_data, meta)
+        aiida_wf_node = Workflow_setup.submit(engine, input_data, ase_obj, meta)
+        if not aiida_wf_node:
+            return fmt_msg('Requested workflow not available', 503)
+
         new_uuid = db.put_item(
             dict(name=node['metadata']['name'], engine=engine, parent=uuid),
             aiida_wf_node.uuid,
@@ -336,6 +339,15 @@ def template():
         'schema': setup.get_schema(engine),
     }
     return Response(json.dumps(output, indent=4), content_type='application/json', status=200)
+
+
+@bp_calculations.route("/supported", methods=['GET'])
+def supported():
+    """
+    Returns list of the supported engines
+    """
+    return Response('["dummy", "dummy+workflow", "pcrystal", "pcrystal+workflow", "gulp", "topas"]',
+        content_type='application/json', status=200)
 
 
 def process_calc(db, calc_row, scheduler_id):

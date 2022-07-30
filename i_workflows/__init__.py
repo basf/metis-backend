@@ -5,13 +5,20 @@ import logging
 from aiida.orm import Int, Code, load_node
 from aiida.engine import submit, ProcessState
 from aiida.common.exceptions import NotExistent
-from aiida_dummy import DummyWorkChain
 
 
 class Workflow_setup:
 
     @staticmethod
-    def submit(*args):
+    def submit(engine, *args):
+        return getattr(Workflow_setup, f'submit_{engine}', lambda: None)(*args)
+
+
+    @staticmethod
+    def submit_dummy(*args):
+
+        from aiida_dummy import DummyWorkChain
+
         wf = DummyWorkChain.get_builder()
         wf.code = Code.get_from_string('Dummy@yascheduler')
 
@@ -19,6 +26,18 @@ class Workflow_setup:
         wf.foobar = Int(dice)
 
         return submit(DummyWorkChain, **wf)
+
+
+    @staticmethod
+    def submit_pcrystal(input_data, ase_obj, meta):
+
+        from mpds_aiida.workflows.aiida import AiidaStructureWorkChain
+        from aiida.plugins import DataFactory
+
+        wf = AiidaStructureWorkChain.get_builder()
+        wf.metadata = dict(label=meta['name'])
+        wf.structure = DataFactory('structure')(ase=ase_obj)
+        return submit(AiidaStructureWorkChain, **wf)
 
 
     @staticmethod
