@@ -8,7 +8,7 @@ from ase.data import chemical_symbols
 from aiida_crystal_dft.io.f34 import Fort34
 from aiida_crystal_dft.io.d12 import D12
 from aiida_crystal_dft.io.basis import BasisFile # NB only used to determine ecp
-
+from mpds_aiida.properties import get_avg_charges
 from pycrystal import CRYSTOUT
 
 from i_data import Data_type
@@ -118,13 +118,36 @@ class Pcrystal_setup:
             return False
 
         result = CRYSTOUT(resource)
-        output = {'type': Data_type.property}
+        output = {'type': Data_type.property, 'content': {}}
 
         if result.info['optgeom']:
-            output['content'] = ase_serialize(result.info['structures'][-1])
+            #output['content'] = ase_serialize(result.info['structures'][-1])
             output['type'] = Data_type.structure
 
-        else:
-            output['content'] = result.info['energy']
+        # TODO
+        # Below is just a quick example
+        # this should be more systematic
 
+        conductor, band_gap = 'no data', 'no data'
+        try: bands_data = result.info['conduction'][-1]
+        except Exception: bands_data = {}
+        if bands_data.get('state') == 'CONDUCTING':
+            conductor, band_gap = True, None
+        elif bands_data.get('state') == 'INSULATING':
+            conductor, band_gap = False, f"{bands_data['band_gap']:.1f}"
+        try:
+            charges = get_avg_charges(result.info['structures'][-1])
+            charges = {el: f"{val:.2f}" for el, val in charges.items()}
+        except Exception: charges = None
+
+        output['content'] = {
+            'total_energy': f"{result.info['energy']:.4f}",
+            'total_energy_units': 'eV',
+            'conductor': conductor,
+            'band_gap': band_gap,
+            'band_gap_units': 'eV',
+            'charges': charges,
+            'n_electrons': result.info['n_electrons'],
+            'correctly_finalized': result.info['finished'] == 2,
+        }
         return output

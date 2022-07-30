@@ -144,3 +144,32 @@ def delete():
     if result:
         return Response('{}', content_type='application/json', status=200)
     return fmt_msg('No such content', 204)
+
+
+@bp_data.route("/examine", methods=['POST'])
+@key_auth
+def examine():
+    """
+    Expects
+        uuid: uuid
+    Returns
+        JSON->error: string
+        or JSON empty dict
+    """
+    uuid = request.values.get('uuid')
+    if not uuid or not is_valid_uuid(uuid):
+        return fmt_msg('Empty or invalid request', 400)
+
+    db = get_data_storage()
+    item = db.get_item(uuid)
+    db.close()
+
+    if not item or item['type'] != Data_type.property:
+        return fmt_msg('Sorry these data cannot be show')
+
+    try:
+        content = json.loads(item['content'])
+    except Exception:
+        return fmt_msg('Sorry these data are erroneous and cannot be show')
+
+    return Response(json.dumps(content, indent=4), content_type='application/json', status=200)

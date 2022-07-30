@@ -32,7 +32,10 @@ class Data_storage:
     def put_item(self, metadata, content, type):
         self.cursor.execute("""
         INSERT INTO {NODE_TABLE} (metadata, content, type) VALUES ('{metadata}', '{content}', {type}) RETURNING item_id;
-        """.format(NODE_TABLE=NODE_TABLE, metadata=json.dumps(metadata), content=content, type=type))
+        """.format(NODE_TABLE=NODE_TABLE,
+            metadata=json.dumps(metadata),
+            content=json.dumps(content) if isinstance(content, dict) else content,
+            type=type))
 
         self.connection.commit()
         return str( self.cursor.fetchone()[0] )
