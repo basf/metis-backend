@@ -42,7 +42,7 @@ def create():
     if not engine:
         engine = 'dummy'
 
-    if engine not in yac.engines:
+    if engine not in yac.config.engines:
         return fmt_msg('Wrong engine requested', 400)
 
     workflow = (request.values.get('workflow') == 'workflow')
@@ -78,7 +78,7 @@ def create():
             input_data[key] = value
 
     # validate
-    for chk in yac.engines[engine].input_files:
+    for chk in yac.config.engines[engine].input_files:
         if chk not in input_data:
             return fmt_msg('Invalid input files', 400)
 
@@ -232,7 +232,7 @@ def update():
     """
     try:
         task_id = int(request.values.get('task_id'))
-        status = int(request.values.get('status', 0))
+        status = int(request.values.get('status'))
     except Exception:
         abort(400)
 
