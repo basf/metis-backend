@@ -133,14 +133,15 @@ def status():
     db = get_data_storage()
 
     if ':' in uuid:
-        uuids = set( uuid.split(':') )
-        for uuid in uuids:
-            if not is_valid_uuid(uuid): return fmt_msg('Invalid content', 400)
+        uuids = uuid.split(':')
+        unique_uuids = set(uuids)
+        for item in unique_uuids:
+            if not is_valid_uuid(item): return fmt_msg('Invalid content', 400)
 
-        calcs = db.get_items(list(uuids))
+        calcs = db.get_items(list(unique_uuids))
 
         #found_uuids = set( [item['uuid'] for item in calcs] )
-        #if found_uuids != uuids:
+        #if found_uuids != unique_uuids:
         #    return fmt_msg('Internal error, consistency broken', 500)
 
     else:
@@ -148,6 +149,7 @@ def status():
 
         item = db.get_item(uuid)
         calcs = [item] if item else []
+        uuids = [uuid]
 
     if not calcs: return fmt_msg('No such content', 204)
 
@@ -213,6 +215,14 @@ def status():
             name=html_formula(calc_name),
             progress=progress
         ))
+
+    if results:
+        if len(uuids) > len(results):
+            found_uuids = set([calc['uuid'] for calc in results])
+            uuids = [item for item in uuids if item in found_uuids]
+            current_app.logger.warning('There are more requested UUIDs than returned calc statuses')
+
+        results = [calc for _, calc in sorted(zip(uuids, results), key=lambda pair: pair[0])]
 
     db.close()
     return Response(json.dumps(results, indent=4), content_type='application/json', status=200)
