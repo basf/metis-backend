@@ -93,14 +93,15 @@ def listing():
     db = get_data_storage()
 
     if ':' in uuid:
-        uuids = set( uuid.split(':') )
-        for uuid in uuids:
+        uuids = uuid.split(':')
+        unique_uuids = set(uuids)
+        for uuid in unique_uuids:
             if not is_valid_uuid(uuid): return fmt_msg('Invalid request')
 
-        items = db.get_items(list(uuids))
+        items = db.get_items(list(unique_uuids))
 
         #found_uuids = set( [item['uuid'] for item in items] )
-        #if found_uuids != uuids:
+        #if found_uuids != unique_uuids:
         #    return fmt_msg('No such content', 204)
 
     else:
@@ -108,8 +109,9 @@ def listing():
 
         item = db.get_item(uuid)
         items = [item] if item else []
+        uuids = [uuid]
 
-        if not items: return fmt_msg('No such content', 204)
+    if not items: return fmt_msg('No such content', 204)
 
     db.close()
 
@@ -120,6 +122,14 @@ def listing():
             type=item['type']
         ) for item in items
     ]
+
+    if len(uuids) > len(items):
+        found_uuids = set([item['uuid'] for item in items])
+        uuids = [item for item in uuids if item in found_uuids]
+        current_app.logger.warning('There were more requested UUIDs than returned')
+
+    items = [item for _, item in sorted(zip(uuids, items), key=lambda pair: pair[0])]
+
     return Response(json.dumps(items, indent=4), content_type='application/json', status=200)
 
 

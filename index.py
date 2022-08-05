@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     # production server
     server = WSGIServer(app=app)
-    server.serve(host='0.0.0.0', port=7050)
+    server.serve(host='127.0.0.1', port=7050)
 
     # development server
     #app.run(host='127.0.0.1', port=7050)

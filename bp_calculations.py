@@ -216,15 +216,16 @@ def status():
             progress=progress
         ))
 
+    db.close()
+
     if results:
         if len(uuids) > len(results):
             found_uuids = set([calc['uuid'] for calc in results])
             uuids = [item for item in uuids if item in found_uuids]
-            current_app.logger.warning('There are more requested UUIDs than returned calc statuses')
+            current_app.logger.warning('There were more requested UUIDs than returned')
 
         results = [calc for _, calc in sorted(zip(uuids, results), key=lambda pair: pair[0])]
 
-    db.close()
     return Response(json.dumps(results, indent=4), content_type='application/json', status=200)
 
 
