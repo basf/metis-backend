@@ -1,7 +1,7 @@
 iters 0
 yobs_eqn !x = 0; min 10 max 175 del 0.01
 
-Out_X_Ycalc( xrd.xy )
+Out_X_Ycalc( calc.xy )
 
 lam
     ymin_on_ymax  0.0001

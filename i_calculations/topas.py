@@ -22,7 +22,7 @@ def check_xrpd(resource):
 
     f.close()
 
-    return dict(value=output) if output else output
+    return dict(content=output) if output else output
 
 
 if __name__ == "__main__":

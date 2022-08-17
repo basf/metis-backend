@@ -175,11 +175,15 @@ def examine():
     db.close()
 
     if not item or item['type'] != Data_type.property:
-        return fmt_msg('Sorry these data cannot be show')
+        return fmt_msg('Sorry these data cannot be shown')
+
+    output = {
+        'engine': item['metadata'].get('engine', 'default engine')
+    } # FIXME "default engine"
 
     try:
-        content = json.loads(item['content'])
+        output['content'] = json.loads(item['content'])
     except Exception:
-        return fmt_msg('Sorry these data are erroneous and cannot be show')
+        return fmt_msg('Sorry these data are erroneous and cannot be shown')
 
-    return Response(json.dumps(content, indent=4), content_type='application/json', status=200)
+    return Response(json.dumps(output, indent=4), content_type='application/json', status=200)

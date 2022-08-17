@@ -351,9 +351,11 @@ def template():
 @bp_calculations.route("/supported", methods=['GET'])
 def supported():
     """
-    Returns list of the supported engines
+    Returns list of the supported engines,
+    e.g.
+    ["dummy", "dummy+workflow", "pcrystal", "pcrystal+workflow", "gulp", "topas"]
     """
-    return Response('["dummy", "dummy+workflow", "pcrystal", "pcrystal+workflow", "gulp", "topas"]',
+    return Response(json.dumps(list(yac.config.engines.keys())),
         content_type='application/json', status=200)
 
 
@@ -373,6 +375,7 @@ def process_calc(db, calc_row, scheduler_id):
         return None, error
 
     output['metadata']['name'] = calc_row['metadata']['name'] + ' result'
+    output['metadata']['engine'] = calc_row['metadata']['engine']
 
     new_uuid = db.put_item(output['metadata'], output['content'], output['type'])
     result = {'uuid': new_uuid, 'parent': calc_row['metadata']['parent']}

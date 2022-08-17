@@ -118,7 +118,7 @@ class Pcrystal_setup:
             return False
 
         result = CRYSTOUT(resource)
-        output = {'type': Data_type.property, 'content': {}}
+        output = {'content': {}}
 
         if result.info['optgeom']:
             #output['content'] = ase_serialize(result.info['structures'][-1])
