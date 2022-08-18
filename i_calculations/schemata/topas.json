@@ -1,9 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Sample schema for calculations (WIP)",
+  "description": "TOPAS calculation schema",
   "type": "object",
   "additionalProperties": true,
   "properties": {
+    "iters": {
+      "type": "number",
+      "properties": {}
+    },
+    "yobs_eqn": {
+      "type": "object",
+      "properties": {}
+    },
+    "lam": {
+      "type": "object",
+      "properties": {}
+    },
     "r_exp": {
       "type": "number",
       "properties": {}
