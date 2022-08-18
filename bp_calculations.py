@@ -145,15 +145,15 @@ def status():
         #    return fmt_msg('Internal error, consistency broken', 500)
 
     else:
+        uuids = [uuid]
         if not is_valid_uuid(uuid): return fmt_msg('Invalid content', 400)
 
         item = db.get_item(uuid)
         calcs = [item] if item else []
-        uuids = [uuid]
 
     if not calcs: return fmt_msg('No such content', 204)
 
-    results = []
+    results_mapping = {}
     yac_items = []
 
     # separating individual yascheduler calcs vs. AiiDA workflows
@@ -169,12 +169,12 @@ def status():
             if not wf_progress:
                 return fmt_msg('Wrong workflow requested', 400)
 
-            results.append(dict(
+            results_mapping[calc['uuid']] = dict(
                 uuid=calc['uuid'],
                 type=Data_type.workflow,
                 name=html_formula(calc['metadata']['name']),
                 progress=wf_progress
-            ))
+            )
             # TODO remove ready workflow
 
         else: return fmt_msg('Wrong item requested', 400)
@@ -209,22 +209,19 @@ def status():
 
             progress = _scheduler_status_mapping[Yascheduler.STATUS_DONE]
 
-        results.append(dict(
+        results_mapping[calc_uuid] = dict(
             uuid=calc_uuid,
             type=Data_type.calculation,
             name=html_formula(calc_name),
             progress=progress
-        ))
+        )
 
     db.close()
 
-    if results:
-        if len(uuids) > len(results):
-            found_uuids = set([calc['uuid'] for calc in results])
-            uuids = [item for item in uuids if item in found_uuids]
-            current_app.logger.warning('There were more requested UUIDs than returned')
-
-        results = [calc for _, calc in sorted(zip(uuids, results), key=lambda pair: pair[0])]
+    results = []
+    if results_mapping:
+        # sort according to unique sequence requested
+        results = list(filter(None, [results_mapping.get(uuid) for uuid in dict.fromkeys(uuids)]))
 
     return Response(json.dumps(results, indent=4), content_type='application/json', status=200)
 

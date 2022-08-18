@@ -19,11 +19,10 @@ def submit_structure(comms, user_session, content):
 
 
 def submit_calc(comms, user_session):
-
     answer = comms.get()
     print("submit_calc" + "=" * 100)
     print(answer)
-    data_id = answer['data'][0]['id']
+    data_id = sorted(answer['data'], key=lambda x: x['id'])[-1]['id'] # take the most recent id
 
     make_request(bff_host + '/v0/calculations', {'dataId': data_id}, 'POST', headers={'Cookie': user_session})
     print('Calc submitted')

@@ -105,30 +105,25 @@ def listing():
         #    return fmt_msg('No such content', 204)
 
     else:
+        uuids = [uuid]
         if not is_valid_uuid(uuid): return fmt_msg('Invalid request')
 
         item = db.get_item(uuid)
         items = [item] if item else []
-        uuids = [uuid]
 
     if not items: return fmt_msg('No such content', 204)
 
     db.close()
 
-    items = [
-        dict(
+    items_mapping = {
+        item['uuid']: dict(
             uuid=item['uuid'],
             name=html_formula(item['metadata']['name']),
             type=item['type']
         ) for item in items
-    ]
-
-    if len(uuids) > len(items):
-        found_uuids = set([item['uuid'] for item in items])
-        uuids = [item for item in uuids if item in found_uuids]
-        current_app.logger.warning('There were more requested UUIDs than returned')
-
-    items = [item for _, item in sorted(zip(uuids, items), key=lambda pair: pair[0])]
+    }
+    # sort according to unique sequence requested
+    items = list(filter(None, [items_mapping.get(uuid) for uuid in dict.fromkeys(uuids)]))
 
     return Response(json.dumps(items, indent=4), content_type='application/json', status=200)
 
