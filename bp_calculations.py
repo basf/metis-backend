@@ -29,7 +29,7 @@ def create():
     Expects
         uuid: uuid
         engine: string, from scheduler engines supported
-        input: {inputname: inputdata, ...}, from scheduler engines supported
+        input: {inputname: inputdata, ...}, as per scheduler engines supported
     Returns
         JSON->error: string
         or JSON {uuid}
@@ -64,18 +64,24 @@ def create():
     # inject user-defined inputs
     user_input_files = request.values.get('input')
     if user_input_files:
-        try: user_input_files = json.loads(user_input_files)
-        except Exception:
-            return fmt_msg('Invalid input definition', 400)
 
-        if type(user_input_files) != dict:
-            return fmt_msg('Invalid input definition', 400)
+        # TODO only the first (main) input is currently considered
+        input_data[ yac.config.engines[engine].input_files[0] ] = user_input_files
+        current_app.logger.warning('Custom input requested:')
+        current_app.logger.warning(input_data)
 
-        for key, value in user_input_files.items():
-            if key not in input_data:
-                return fmt_msg('Invalid input %s' % key, 400)
-
-            input_data[key] = value
+        #try: user_input_files = json.loads(user_input_files)
+        #except IndexError:
+        #    return fmt_msg('Invalid input definition', 400)
+        #
+        #if type(user_input_files) != dict:
+        #    return fmt_msg('Invalid input definition', 400)
+        #
+        #for key, value in user_input_files.items():
+        #    if key not in input_data:
+        #        return fmt_msg('Invalid input %s' % key, 400)
+        #
+        #    input_data[key] = value
 
     # validate
     for chk in yac.config.engines[engine].input_files:
@@ -96,7 +102,7 @@ def create():
             aiida_wf_node.uuid,
             Data_type.workflow
         )
-        current_app.logger.warning(f'Started workflow {aiida_wf_node.uuid}')
+        current_app.logger.warning(f'Submitted workflow {aiida_wf_node.uuid}')
 
     else:
         # TODO define in config
@@ -110,7 +116,7 @@ def create():
             task_id,
             Data_type.calculation
         )
-        current_app.logger.warning(f'Started calculation {task_id}')
+        current_app.logger.warning(f'Submitted calculation {task_id}')
 
     db.close()
     return Response(json.dumps(dict(uuid=new_uuid), indent=4), content_type='application/json', status=200)
@@ -371,8 +377,8 @@ def process_calc(db, calc_row, scheduler_id):
     if error:
         return None, error
 
-    output['metadata']['name'] = calc_row['metadata']['name'] + ' result'
     output['metadata']['engine'] = calc_row['metadata']['engine']
+    output['metadata']['name'] = calc_row['metadata']['name'] + ' result'
 
     new_uuid = db.put_item(output['metadata'], output['content'], output['type'])
     result = {'uuid': new_uuid, 'parent': calc_row['metadata']['parent']}

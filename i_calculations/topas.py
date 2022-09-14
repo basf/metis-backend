@@ -14,15 +14,20 @@ def check_xrpd(resource):
         if not line:
             break
         try:
-            #output.append([float(item) for item in line.split()])
-            output.append([int(round(float(item))) for item in line.split()])
+            output.append([float(item) for item in line.split()])
         except ValueError:
             output = False
             break
 
     f.close()
 
-    return dict(content=output) if output else output
+    if output:
+        # normalize
+        ymax = max([y for _, y in output])
+        output = [[x, int(round(y / ymax * 200))] for x, y in output]
+        return dict(content=output)
+
+    return None
 
 
 if __name__ == "__main__":
