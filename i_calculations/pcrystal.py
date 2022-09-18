@@ -12,7 +12,8 @@ from mpds_aiida.properties import get_avg_charges
 from pycrystal import CRYSTOUT
 
 from i_data import Data_type
-from utils import config, ase_serialize
+from i_structures.struct_utils import ase_serialize
+from utils import config
 
 
 ELS_REPO_DIR = config.get('local', 'pcrystal_bs_path', fallback='/tmp')

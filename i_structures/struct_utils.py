@@ -2,6 +2,8 @@
 import math
 import re
 import random
+import pickle
+import base64
 import itertools
 from functools import reduce
 from io import StringIO
@@ -16,7 +18,7 @@ import spglib
 
 def detect_format(string):
     """
-    Detect CIF or POSCAR
+    Detect CIF, POSCAR, or Optimade
     checking the most common features
     """
     if '_cell_angle_gamma' in string \
@@ -111,7 +113,7 @@ def json_to_ase(datarow):
 def optimade_to_ase(structure, skip_disorder=False):
     """
     A very permissive Optimade format support
-    so far WITHOUT the disordered structures
+    so far only with a very limited disorder handling
 
     Returns:
         ASE Atoms (object) *or* None
@@ -329,3 +331,32 @@ def order_disordered(ase_obj):
 
 def extract_chemical_element(str):
     return re.sub("\W", "", str)
+
+
+def ase_serialize(ase_obj):
+    return base64.b64encode(pickle.dumps(ase_obj, protocol=4)).decode('ascii')
+
+
+def ase_unserialize(string):
+    return pickle.loads(base64.b64decode(string))
+
+
+if __name__ == "__main__":
+
+    from ase.spacegroup import crystal
+
+    crystal_obj = crystal(
+        ('Sr', 'Ti', 'O', 'O'),
+        basis=[(0, 0.5, 0.25), (0, 0, 0), (0, 0, 0.25), (0.255, 0.755, 0)],
+        spacegroup=140, cellpar=[5.511, 5.511, 7.796, 90, 90, 90],
+        primitive_cell=True
+    )
+    #print(crystal_obj)
+
+    repr = ase_serialize(crystal_obj)
+    #print(repr)
+
+    new_obj = ase_unserialize(repr)
+    #print(new_obj)
+
+    assert new_obj == crystal_obj

@@ -5,11 +5,12 @@ from unidecode import unidecode
 
 from flask import Blueprint, current_app, request, Response
 
-from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
-from i_structures.cif_utils import cif_to_ase
 from i_data import Data_type
+from i_structures import html_formula
+from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula, ase_serialize
+from i_structures.cif_utils import cif_to_ase
 
-from utils import get_data_storage, fmt_msg, key_auth, is_plain_text, html_formula, is_valid_uuid, ase_serialize
+from utils import get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
 
 
 bp_data = Blueprint('data', __name__, url_prefix='/data')

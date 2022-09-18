@@ -7,12 +7,14 @@ import requests
 from yascheduler import Yascheduler
 
 from utils import (
-    get_data_storage, fmt_msg, key_auth, webhook_auth, html_formula, is_valid_uuid, ase_unserialize,
+    get_data_storage, fmt_msg, key_auth, webhook_auth, is_valid_uuid,
     WEBHOOK_KEY, WEBHOOK_CALC_UPDATE, WEBHOOK_CALC_CREATE
 )
 from i_calculations import Calc_setup, _scheduler_status_mapping
 from i_workflows import Workflow_setup
 from i_data import Data_type
+from i_structures import html_formula
+from i_structures.struct_utils import ase_unserialize
 
 
 bp_calculations = Blueprint('calculations', __name__, url_prefix='/calculations')
@@ -280,7 +282,7 @@ def update():
             if error:
                 current_app.logger.error(error)
             else:
-                current_app.logger.warning('Successfully processed calc %s and linked %s -> %s' % (
+                current_app.logger.warning('Successfully processed calc %s and linked node %s to node %s' % (
                     task_id, result['parent'], result['uuid']))
 
             progress = _scheduler_status_mapping[status]

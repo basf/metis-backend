@@ -1,4 +1,8 @@
-
+"""
+A simple persistence layer implementation;
+only a few Postgres tables are used;
+of course we use SQL here only and nowhere else
+"""
 import json
 
 import pg8000
