@@ -184,12 +184,12 @@ def refine(ase_obj, accuracy=1E-03, conventional_cell=False):
         Refined ASE structure (object) *or* None
         None *or* error (str)
     """
-    try:
-        symmetry = spglib.get_spacegroup(ase_obj, symprec=accuracy)
-        lattice, positions, numbers = spglib.standardize_cell(ase_obj, symprec=accuracy, to_primitive=not conventional_cell)
-    except:
-        return None, 'Error while structure refinement'
+    spg_result = spglib.standardize_cell(ase_obj, symprec=accuracy, to_primitive=not conventional_cell)
+    if not spg_result or len(spg_result) != 3:
+        return None, f'Error in structure refinement, spglib returned {spg_result}'
+    lattice, positions, numbers = spg_result
 
+    symmetry = spglib.get_spacegroup(ase_obj, symprec=accuracy)
     try:
         spacegroup = int( symmetry.split()[1].replace("(", "").replace(")", "") )
     except (ValueError, IndexError, AttributeError):

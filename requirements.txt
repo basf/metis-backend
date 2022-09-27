@@ -13,7 +13,7 @@ sseclient-py
 
 cython # NB might be required beforehand
 numpy
-scipy == 1.5.4
+scipy
 ase
 pycodcif
 spglib

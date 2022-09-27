@@ -18,10 +18,13 @@ host = 'http://localhost:7050'
 
 content = open(sys.argv[1]).read()
 
+try: engine = sys.argv[2]
+except IndexError: engine = 'topas'
+
 _, answer = make_request(host + '/data/create', {'content': content}, 'POST', headers={'Key': API_KEY})
 print(answer)
 print('=' * 100 + 'Data uploaded correctly')
 
-_, answer = make_request(host + '/calculations/create', {'uuid': answer['uuid'], 'engine': 'topas'}, 'POST', headers={'Key': API_KEY})
+_, answer = make_request(host + '/calculations/create', {'uuid': answer['uuid'], 'engine': engine}, 'POST', headers={'Key': API_KEY})
 print(answer)
-print('=' * 100 + 'Calc submitted correctly')
+print('=' * 100 + f'Calc via {engine} engine submitted correctly')
