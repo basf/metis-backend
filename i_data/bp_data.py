@@ -2,12 +2,16 @@
 #from pprint import pprint
 import json
 from unidecode import unidecode
+from io import StringIO
 
 from flask import Blueprint, current_app, request, Response
+from ase import io as ase_io
 
 from i_data import Data_type
 from i_structures import html_formula
-from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula, ase_serialize
+from i_structures.struct_utils import (
+    detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula, ase_serialize, ase_unserialize
+)
 from i_structures.cif_utils import cif_to_ase
 
 from utils import get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
@@ -170,16 +174,29 @@ def examine():
     item = db.get_item(uuid)
     db.close()
 
-    if not item or item['type'] != Data_type.property:
+    if not item:
         return fmt_msg('Sorry these data cannot be shown')
 
-    output = {
-        'engine': item['metadata'].get('engine', 'default engine')
-    } # FIXME "default engine"
+    output = {}
 
-    try:
-        output['content'] = json.loads(item['content'])
-    except Exception:
-        return fmt_msg('Sorry these data are erroneous and cannot be shown')
+    if item['type'] == Data_type.property:
+
+        output['engine'] = item['metadata'].get('engine', 'default engine') # FIXME "default engine"
+
+        try:
+            output['content'] = json.loads(item['content'])
+        except Exception:
+            return fmt_msg('Sorry these data are erroneous and cannot be shown')
+
+    elif item['type'] == Data_type.structure:
+
+        ase_obj = ase_unserialize(item['content'])
+
+        with StringIO() as fd:
+            ase_io.write(fd, ase_obj, format='vasp')
+            output['content'] = fd.getvalue()
+
+    else:
+        return fmt_msg('Sorry this data type cannot be shown')
 
     return Response(json.dumps(output, indent=4), content_type='application/json', status=200)
