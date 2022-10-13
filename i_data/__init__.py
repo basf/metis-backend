@@ -10,6 +10,7 @@ import pg8000
 
 NODE_TABLE = 'backend_data_nodes'
 LINK_TABLE = 'backend_data_links'
+PHASE_TABLE = 'distinct_phases'
 
 
 class Data_type:
