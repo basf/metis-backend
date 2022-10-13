@@ -192,6 +192,12 @@ def examine():
 
         ase_obj = ase_unserialize(item['content'])
 
+        if len(ase_obj) < 10:
+            orig_cell = ase_obj.cell[:]
+            ase_obj *= (2, 2, 2)
+            ase_obj.set_cell(orig_cell)
+        ase_obj.center(about=0.0)
+
         with StringIO() as fd:
             ase_io.write(fd, ase_obj, format='vasp')
             output['content'] = fd.getvalue()
