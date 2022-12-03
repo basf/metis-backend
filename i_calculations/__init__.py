@@ -46,11 +46,12 @@ class Calc_setup:
             Calc_setup.schemata['dummy'])
 
 
-    def preprocess(self, ase_obj, engine, name):
+    def preprocess(self, ase_obj, engine, name, **kwargs):
 
         error = None
 
         if engine == 'topas':
+
             result = {
                 'calc.inp': self.get_input(engine),
                 'structure.inc': ase_to_topas(ase_obj),
@@ -58,7 +59,7 @@ class Calc_setup:
 
         elif engine == 'pcrystal':
 
-            setup = Pcrystal_setup(ase_obj)
+            setup = Pcrystal_setup(ase_obj, custom_template=kwargs.get('custom_template'))
             error = setup.validate()
             if error:
                 return None, error

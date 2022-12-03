@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import logging
 
 import set_path
 from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
@@ -36,11 +37,17 @@ ase_obj, error = refine(ase_obj, conventional_cell=True)
 if error:
     raise RuntimeError(error)
 
+try:
+    template = sys.argv[2]
+except IndexError:
+    template = None
+if template:
+    logging.warning(f'Using template {template}')
+
 setup = Calc_setup()
-inputs, error = setup.preprocess(ase_obj, 'pcrystal', 'Metis test')
+inputs, error = setup.preprocess(ase_obj, 'pcrystal', 'Metis test', custom_template=template)
 if error:
     raise RuntimeError(error)
-
 
 print(inputs['INPUT'])
 print('=' * 100)

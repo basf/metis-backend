@@ -20,3 +20,4 @@ spglib
 git+https://github.com/tilde-lab/yascheduler
 aiida-core == 2.0.2
 git+https://github.com/tilde-lab/aiida-crystal-dft
+git+https://github.com/tilde-lab/aiida-dummy

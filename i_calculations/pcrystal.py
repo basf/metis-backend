@@ -8,7 +8,7 @@ from ase.data import chemical_symbols
 from aiida_crystal_dft.io.f34 import Fort34
 from aiida_crystal_dft.io.d12 import D12
 from aiida_crystal_dft.io.basis import BasisFile # NB only used to determine ecp
-from mpds_aiida.properties import get_avg_charges
+
 from pycrystal import CRYSTOUT
 
 from i_data import Data_type
@@ -79,6 +79,34 @@ def get_input(calc_params_crystal, elements, bs_src, label):
     raise RuntimeError('Unknown basis set source format!')
 
 
+def get_avg_charges(ase_obj):
+    """
+    Get an average Mulliken charge for each chemical element in a crystal
+    """
+    at_type_chgs = {}
+    for atom in ase_obj:
+        at_type_chgs.setdefault(atom.symbol, []).append(atom.charge)
+
+    if sum([sum(at_type_chgs[at_type]) for at_type in at_type_chgs]) == 0.0:
+        return None
+
+    return {at_type: np.average(at_type_chgs[at_type]) for at_type in at_type_chgs}
+
+
+def get_avg_magmoms(ase_obj):
+    """
+    Get an average Bohr magneton for each chemical element in a crystal
+    """
+    at_type_chgs = {}
+    for atom in ase_obj:
+        at_type_chgs.setdefault(atom.symbol, []).append(atom.magmom)
+
+    if abs(sum([sum(at_type_chgs[at_type]) for at_type in at_type_chgs])) < 0.05: # TODO
+        return None
+
+    return {at_type: np.average(at_type_chgs[at_type]) for at_type in at_type_chgs}
+
+
 class Pcrystal_setup:
 
     els_repo = get_basis_sets()
@@ -86,9 +114,14 @@ class Pcrystal_setup:
     assert calc_setup['default']['crystal']
 
 
-    def __init__(self, ase_obj):
+    def __init__(self, ase_obj, custom_template=None):
         self.ase_obj = ase_obj
         self.els = list(set(self.ase_obj.get_chemical_symbols()))
+        self.custom_template = None
+
+        if custom_template:
+            self.custom_template = get_template(custom_template)
+            assert self.custom_template['default']['crystal']
 
 
     def validate(self):
@@ -106,7 +139,8 @@ class Pcrystal_setup:
 
     def get_input_setup(self, label):
         return str(get_input(
-            Pcrystal_setup.calc_setup['default']['crystal'],
+            self.custom_template['default']['crystal'] if self.custom_template \
+                else Pcrystal_setup.calc_setup['default']['crystal'],
             self.els,
             Pcrystal_setup.els_repo,
             label
@@ -148,6 +182,7 @@ class Pcrystal_setup:
             'band_gap': band_gap,
             'band_gap_units': 'eV',
             'charges': charges,
+            #'magmoms': magmoms,
             'n_electrons': result.info['n_electrons'],
             'correctly_finalized': result.info['finished'] == 2,
         }

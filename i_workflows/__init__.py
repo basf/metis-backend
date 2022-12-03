@@ -5,6 +5,10 @@ import logging
 from aiida.orm import Int, Code, load_node
 from aiida.engine import submit, ProcessState
 from aiida.common.exceptions import NotExistent
+from aiida.plugins import DataFactory
+
+from aiida_dummy import DummyWorkChain
+from aiida_crystal_dft.workflows.base import BaseCrystalWorkChain
 
 
 class Workflow_setup:
@@ -16,8 +20,6 @@ class Workflow_setup:
 
     @staticmethod
     def submit_dummy(*args):
-
-        from aiida_dummy import DummyWorkChain
 
         wf = DummyWorkChain.get_builder()
         wf.code = Code.get_from_string('Dummy@yascheduler')
@@ -31,13 +33,18 @@ class Workflow_setup:
     @staticmethod
     def submit_pcrystal(input_data, ase_obj, meta):
 
-        from mpds_aiida.workflows.aiida import AiidaStructureWorkChain
-        from aiida.plugins import DataFactory
-
-        wf = AiidaStructureWorkChain.get_builder()
+        wf = BaseCrystalWorkChain.get_builder()
         wf.metadata = dict(label=meta['name'])
+
+        wf.code = Code.get_from_string('Pcrystal@yascheduler')
+        wf.basis_family, _ = DataFactory('crystal_dft.basis_family').get_or_create('STO-3G') # FIXME use pcrystal_bs_path
         wf.structure = DataFactory('structure')(ase=ase_obj)
-        return submit(AiidaStructureWorkChain, **wf)
+
+        # TODO
+        #wf.parameters = crystal_calc_parameters
+        #wf.options = DataFactory("dict")(dict={'resources': {"num_machines": 1, "num_mpiprocs_per_machine": 1}})
+
+        return submit(BaseCrystalWorkChain, **wf)
 
 
     @staticmethod
