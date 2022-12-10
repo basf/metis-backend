@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from os import environ
+
 from flask import Flask
 from netius.servers import WSGIServer
 from aiida import load_profile as load_aiida_profile
@@ -17,9 +19,12 @@ if __name__ == '__main__':
 
     load_aiida_profile()
 
+    host = environ.get('HOST', '127.0.0.1')
+    port = int(environ.get('PORT', '7050'))
+
     # production server
     server = WSGIServer(app=app)
-    server.serve(host='127.0.0.1', port=7050)
+    server.serve(host=host, port=port)
 
     # development server
-    #app.run(host='127.0.0.1', port=7050)
+    #app.run(host=host, port=port)
