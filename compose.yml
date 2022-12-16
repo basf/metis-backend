@@ -56,11 +56,11 @@ services:
       RMQHOST: rabbitmq
       RMQPASSWORD: *rabbitpass
       RMQUSER: *rabbituser
-      TZ: Europe/Moscow
+      TZ: Europe/Berlin
       USER_EMAIL: aiida@localhost
       USER_FIRST_NAME: Giuseppe
       USER_LAST_NAME: Verdi
-      USER_INSTITUTION: TildeMI
+      USER_INSTITUTION: LaScala
       HOST: "0.0.0.0"
       API_KEY: &apikey a-very-very-very-long-and-very-very-very-secret-string
       WEBHOOKS_KEY: &webhookskey another-very-very-long-and-very-very-very-secret-string
