@@ -1,0 +1,9 @@
+#!/command/execlineb -P
+
+with-contenv
+
+if { s6-test -v YASCHEDULER_ADD_NODE_HOST }
+importas HOST YASCHEDULER_ADD_NODE_HOST
+importas -D "root" USERNAME YASCHEDULER_ADD_NODE_USER
+foreground { echo Adding node $HOST }
+wait-for-it ${HOST}:22 --timeout=60 --strict -- bash -c "yasetnode ${USERNAME}@$( getent hosts $HOST | awk '{ print $1 }' )"

@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+
+with-contenv
+verdi daemon start --foreground

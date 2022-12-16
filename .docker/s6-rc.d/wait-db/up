@@ -1,0 +1,8 @@
+#!/command/execlineb -P
+foreground { echo Waiting for postgres... }
+
+with-contenv
+importas -D "db"    HOST PGHOST
+importas -D "5432"  PORT PGPORT
+
+wait-for-it ${HOST}:$PORT --timeout=60 --strict -- echo "postgres is up"

@@ -1,0 +1,5 @@
+#!/command/execlineb -P
+foreground { echo Initialize ssh... }
+
+with-contenv
+/app/.docker/init-ssh.sh

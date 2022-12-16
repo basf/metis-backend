@@ -1,0 +1,5 @@
+#!/command/execlineb -P
+foreground { echo Initialize aiida... }
+
+with-contenv
+/app/.docker/init-aiida.sh
