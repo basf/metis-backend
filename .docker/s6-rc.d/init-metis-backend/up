@@ -1,0 +1,5 @@
+#!/command/execlineb -P
+foreground { echo Initialize metis-backend... }
+
+with-contenv
+/app/.docker/init-metis-backend.py

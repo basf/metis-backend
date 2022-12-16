@@ -16,7 +16,6 @@ Thus, `metis-backend` consists of 3 independent parts, each using Postgres:
 
 Optionally, a frontend server is **Nginx** (`conf/nginx.conf` goes to `/etc/nginx`), and all these guys are controlled by the **Supervisor** daemon (`conf/supervisord.conf` goes to `/etc/supervisor`).
 
-
 ## Installation
 
 See `conf/install.sh` for installation of Nginx, Postgres, RabbitMQ, and Supervisor, as well as configuring them. Run `conf/install.sh` and then modify global options `conf/env.ini`.
@@ -40,7 +39,6 @@ Then setup your virtual env, if needed, and install the Python requirements `pip
 
 Finally, apply the database schema: `/data/pg/bin/psql -U postgres -d metis -f i_data/schema.sql`.
 
-
 ## Running
 
 Run `supervisorctl status` to see (nearly) all the services in Supervisor.
@@ -54,6 +52,20 @@ One by one, all the parts are managed as follows:
 - Postgres database(s) can be seen with `/data/pg/bin/psql -U postgres -l`
 - RabbitMQ is controlled with `rabbitmqctl status`
 
+## Run in containers
+
+This is an experimental feature intended primarily for development and testing.
+
+It is assumed that you have the `metis-backend`, `metis-bff`, and `metis-gui`
+repositories cloned on the same level. Also, you need `docker` and `docker-compose`
+(or `podman` and `podman-compose`) installed.
+
+Now, you can run `docker-compose up` (`podman-compose up`) in `metis-backend`
+directory. This should start all dependencies and services.
+
+`metis-gui` should be available at `http://localhost:10000/`
+
+`metis-bff` shoult be available at `http://localhost:10000/api`
 
 ## License
 

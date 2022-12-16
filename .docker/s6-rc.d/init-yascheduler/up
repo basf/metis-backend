@@ -1,0 +1,5 @@
+#!/command/execlineb -P
+foreground { echo Initialize yascheduler... }
+
+with-contenv
+/app/.docker/init-yascheduler.py

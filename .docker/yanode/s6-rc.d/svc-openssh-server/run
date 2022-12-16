@@ -1,0 +1,9 @@
+#!/usr/bin/with-contenv bash
+# allow custom port
+
+: "${PORT:=2222}"
+USER_NAME=${USER_NAME:-linuxserver.io}
+
+exec 2>&1 \
+    s6-notifyoncheck -d -n 300 -w 1000 -c "nc -z localhost $PORT" \
+        s6-setuidgid "${USER_NAME}" /usr/sbin/sshd.pam -D -e -p "$PORT"
