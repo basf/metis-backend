@@ -145,7 +145,7 @@ services:
     volumes:
       - .docker/yanode/s6-rc.d/svc-openssh-server/run:/etc/s6-overlay/s6-rc.d/svc-openssh-server/run
       - .docker/yanode/custom-cont-init.d:/custom-cont-init.d
-      - yanode-host-heys:/config/ssh_host_keys
+      - yanode-host-keys:/config/ssh_host_keys
       - yanode-pubkeys:/pubkeys
       - yanode-data:/config/data
     ports:
