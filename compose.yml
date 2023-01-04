@@ -106,7 +106,7 @@ services:
       API_KEY: *apikey
       # TODO: WEBHOOKS_KEY
     ports:
-      - "10001:3000"
+      - "3000:3000"
     # volumes:
     #   - ../metis-bff:/app
 
