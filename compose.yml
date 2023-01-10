@@ -117,15 +117,6 @@ services:
     build:
       target: build
       context: ../metis-gui
-    environment:
-      PORT: "5000"
-      FORCE_HTTPS: "0"
-      PROXY_BFF_API_URL: "http://metis-bff:3000"
-      METIS_RUNTIME_CONFIG: |
-        {
-          'API_HOST': location.origin.concat('/api'),
-          'IDPS': ['local'],
-        }
     ports:
       - "5000:5000"
     volumes:
