@@ -1,0 +1,5 @@
+services:
+  metis-bff:
+    volumes:
+      - ../metis-bff:/app
+    entrypoint: "npm run dev"
