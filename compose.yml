@@ -76,10 +76,8 @@ services:
       - yanode-pubkeys:/yanode-put-pubkey-here
       # auto add yanode:
       - .docker/empty:/etc/s6-overlay/s6-rc.d/user/contents.d/yascheduler-add-node
-      # - .docker/s6-rc.d:/etc/s6-overlay/s6-rc.d
-      # - .:/app
     ports:
-      - "10002:7050"
+      - "7050:7050"
     healthcheck:
       test: curl http://localhost:7050/calculations/template
       interval: 5s
@@ -106,12 +104,10 @@ services:
       API_KEY: *apikey
       # TODO: WEBHOOKS_KEY
     ports:
-      - "10001:3000"
-    # volumes:
-    #   - ../metis-bff:/app
+      - "3000:3000"
 
-  metis-frontend:
-    container_name: metis-frontend
+  metis-gui:
+    container_name: metis-gui
     depends_on: ["metis-bff"]
     build:
       context: ../metis-gui
@@ -126,8 +122,6 @@ services:
         }
     ports:
       - "10000:8080"
-    # volumes:
-    #   - ../metis-frontent/dist:/srv
 
   yanode:
     image: docker.io/linuxserver/openssh-server:latest
