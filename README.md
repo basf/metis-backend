@@ -63,9 +63,9 @@ repositories cloned on the same level. Also, you need `docker` and `docker-compo
 Now, you can run `docker-compose up` (`podman-compose up`) in `metis-backend`
 directory. This should start all dependencies and services.
 
-`metis-gui` should be available at `http://localhost:10000/`
+`metis-gui` should be available at `http://localhost:5000/`
 
-`metis-bff` shoult be available at `http://localhost:10000/api`
+`metis-bff` shoult be available at `http://localhost:3000/api`
 
 ## License
 
