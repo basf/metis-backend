@@ -10,28 +10,31 @@ from common import make_request, TEST_CREDENTIALS
 
 
 bff_host = 'http://localhost:3000'
-#bff_host = 'https://gate.basf.science'
 
 
 def submit_structure(comms, user_session, content):
-    make_request(bff_host + '/v0/datasources', {'content': content}, 'POST', headers={'Cookie': user_session})
-    print('Structure submitted')
+    make_request(bff_host + '/v0/datasources', {'content': content}, 'POST',
+        headers={'Cookie': user_session})
+    print('=' * 100 + 'Structure submitted')
 
 
 def submit_calc(comms, user_session):
     answer = comms.get()
-    print("submit_calc" + "=" * 100)
+    print('=' * 100 + 'Submitting calculation')
     print(answer)
     data_id = sorted(answer['data'], key=lambda x: x['id'])[-1]['id'] # take the most recent id
 
-    make_request(bff_host + '/v0/calculations', {'dataId': data_id}, 'POST', headers={'Cookie': user_session})
-    print('Calc submitted')
+    make_request(bff_host + '/v0/calculations', {'dataId': data_id}, 'POST',
+        headers={'Cookie': user_session})
+    print('=' * 100 + 'Calculation submitted')
 
 
 headers, _ = make_request(bff_host + '/v0/auth', TEST_CREDENTIALS, 'POST')
 user_session = headers['set-cookie']
 
-content = open(sys.argv[1]).read()
+try: content = open(sys.argv[1]).read()
+except IndexError: content = """{"attributes":{"immutable_id":42, "species":[{"chemical_symbols":
+["Au"]}],"cartesian_site_positions":[[0,0,0]],"lattice_vectors":[[0,2,2],[2,0,2],[2,2,0]]}}"""
 
 queue = Queue()
 
@@ -42,7 +45,8 @@ thread = threading.Timer(2, submit_calc, args=(queue, user_session))
 thread.start()
 
 http = urllib3.PoolManager()
-response = http.request('GET', bff_host + '/stream', preload_content=False, headers={'Accept': 'text/event-stream', 'Cookie': user_session})
+response = http.request('GET', bff_host + '/stream', preload_content=False,
+    headers={'Accept': 'text/event-stream', 'Cookie': user_session})
 client = sseclient.SSEClient(response)
 for event in client.events():
     answer = json.loads(event.data)
@@ -53,5 +57,9 @@ for event in client.events():
 
     error = answer['data'][0].get('error')
     if error:
-        raise RuntimeError
+        raise RuntimeError(error)
+
     queue.put(answer)
+
+    if 'progress' in event.data: # TODO get calculation stream
+        print('=' * 100 + 'Test passed')

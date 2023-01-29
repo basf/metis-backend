@@ -19,9 +19,10 @@ req = httplib2.Http()
 
 def make_request(url, data, httpverb='GET', headers={}):
 
-    url = url + '?' + urlencode(data)
-
     if httpverb == 'GET':
+        response, content = req.request(url + '?' + urlencode(data), httpverb, headers=headers)
+
+    elif httpverb == 'HEAD':
         response, content = req.request(url, httpverb, headers=headers)
 
     else:
