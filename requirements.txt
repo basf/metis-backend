@@ -5,7 +5,6 @@ pg8000
 flask
 netius
 ujson
-httplib2
 unidecode
 
 # Scientific part
