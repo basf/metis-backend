@@ -7,10 +7,10 @@ netius
 ujson
 httplib2
 unidecode
-sseclient-py
 
 # Scientific part
 
+pyparsing <= 2.4.7
 cython # NB might be required beforehand
 numpy
 scipy
