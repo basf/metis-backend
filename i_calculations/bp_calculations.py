@@ -11,7 +11,6 @@ from utils import (
     WEBHOOK_KEY, WEBHOOK_CALC_UPDATE, WEBHOOK_CALC_CREATE
 )
 from i_calculations import Calc_setup, _scheduler_status_mapping
-from i_workflows import Workflow_setup
 from i_data import Data_type
 from i_structures import html_formula
 from i_structures.struct_utils import ase_unserialize
@@ -91,20 +90,7 @@ def create():
             return fmt_msg('Invalid input files', 400)
 
     if workflow:
-        # TODO input_data unused
-        meta = {
-            'name': node['metadata']['name'],
-        }
-        aiida_wf_node = Workflow_setup.submit(engine, input_data, ase_obj, meta)
-        if not aiida_wf_node:
-            return fmt_msg('Requested workflow not available', 503)
-
-        new_uuid = db.put_item(
-            dict(name=node['metadata']['name'], engine=engine, parent=uuid),
-            aiida_wf_node.uuid,
-            Data_type.workflow
-        )
-        current_app.logger.warning(f'Submitted workflow {aiida_wf_node.uuid}')
+        abort(501)
 
     else:
         # TODO define in config

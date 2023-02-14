@@ -5,7 +5,6 @@ import json
 
 from yascheduler import Yascheduler
 
-from i_calculations.pcrystal import Pcrystal_setup
 from i_calculations.topas import check_xrpd
 from i_data import Data_type
 from i_structures.topas import ase_to_topas
@@ -23,7 +22,7 @@ class Calc_setup:
     schemata = {}
     templates = {}
 
-    for engine in ['topas', 'pcrystal', 'dummy']:
+    for engine in ['topas', 'dummy']:
 
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "schemata/%s.json" % engine), 'r') as f:
             schemata[engine] = json.loads(f.read())
@@ -57,18 +56,6 @@ class Calc_setup:
                 'structure.inc': ase_to_topas(ase_obj),
             }
 
-        elif engine == 'pcrystal':
-
-            setup = Pcrystal_setup(ase_obj, custom_template=kwargs.get('custom_template'))
-            error = setup.validate()
-            if error:
-                return None, error
-
-            result = {
-                'INPUT': setup.get_input_setup(name),
-                'fort.34': setup.get_input_struct(),
-            }
-
         else:
             result = {
                 '1.input': self.get_input('dummy'),
@@ -85,7 +72,6 @@ class Calc_setup:
 
         parsers = {
             'topas': check_xrpd,
-            'pcrystal': Pcrystal_setup.parse,
         }
         default_parser = lambda x: {'content': 42}
         parser = parsers.get(engine, default_parser)
@@ -128,4 +114,3 @@ if __name__ == "__main__":
     setup = Calc_setup()
     #print(setup.get_input('hi'))
     #print(setup.preprocess(test_obj, 'topas', 'Metis test'))
-    print(setup.postprocess('pcrystal', sys.argv[1]))
