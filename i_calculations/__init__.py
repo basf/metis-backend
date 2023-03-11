@@ -5,7 +5,7 @@ import json
 
 from yascheduler import Yascheduler
 
-from i_calculations.topas import check_xrpd
+from i_calculations.topas import get_pattern
 from i_data import Data_type
 from i_structures.topas import ase_to_topas
 
@@ -71,7 +71,7 @@ class Calc_setup:
         output = dict(metadata={}, content=None, type=Data_type.property)
 
         parsers = {
-            'topas': check_xrpd,
+            'topas': get_pattern,
         }
         default_parser = lambda x: {'content': 42}
         parser = parsers.get(engine, default_parser)
@@ -91,7 +91,7 @@ class Calc_setup:
             break
 
         else:
-            return None, 'Cannot find any results'
+            return None, f'Cannot find any results expected for {engine} in {data_folder}'
 
         output['metadata']['path'] = main_file_asset
         output['content'] = result['content']

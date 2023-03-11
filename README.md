@@ -37,7 +37,7 @@ bash conf/aiida_setup.sh
 
 Then setup your virtual env, if needed, and install the Python requirements `pip install -r requirements.txt`.
 
-Finally, apply the database schema: `/data/pg/bin/psql -U postgres -d metis -f i_data/schema.sql`.
+Finally, apply the database schema: `/data/pg/bin/psql -U postgres -d metis -f schema/schema.sql`.
 
 ## Running
 

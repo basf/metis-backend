@@ -40,10 +40,7 @@ def create():
         return fmt_msg('Empty or invalid request', 400)
 
     engine = request.values.get('engine')
-    if not engine:
-        engine = 'dummy'
-
-    if engine not in yac.config.engines:
+    if not engine or engine not in yac.config.engines:
         return fmt_msg('Wrong engine requested', 400)
 
     workflow = (request.values.get('workflow') == 'workflow')
@@ -54,7 +51,7 @@ def create():
     if not node:
         return fmt_msg('No such content', 204)
 
-    if node['type'] != Data_type.structure: # Data_type.property
+    if node['type'] != Data_type.structure: # FIXME
         return fmt_msg('The item of this type cannot be used for calculation', 400)
 
     ase_obj = ase_unserialize(node['content'])
@@ -104,7 +101,7 @@ def create():
             task_id,
             Data_type.calculation
         )
-        current_app.logger.warning(f'Submitted calculation {task_id}')
+        current_app.logger.warning(f'Submitted {engine} calculation {task_id}')
 
     db.close()
     return Response(json.dumps(dict(uuid=new_uuid), indent=4), content_type='application/json', status=200)
@@ -178,7 +175,7 @@ def status():
         yac_tasks = yac.queue_get_tasks(jobs=[ item['content'] for item in yac_items ])
 
         if not yac_tasks or len(yac_tasks) != len(yac_items):
-            return fmt_msg('Internal error, task(s) not scheduled', 500)
+            return fmt_msg('Scheduler and backend are out of sync, task(s) not scheduled', 500)
 
     for task in yac_tasks:
 
