@@ -4,7 +4,7 @@ import json
 from unidecode import unidecode
 from io import StringIO
 
-from flask import Blueprint, current_app, request, Response
+from flask import Blueprint, current_app, request, abort, Response
 from ase import io as ase_io
 
 from i_data import Data_type
@@ -13,6 +13,7 @@ from i_structures.struct_utils import (
     detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula, ase_serialize, ase_unserialize
 )
 from i_structures.cif_utils import cif_to_ase
+from i_calculations.topas import get_pattern, get_pattern_name
 
 from utils import get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
 
@@ -24,7 +25,7 @@ bp_data = Blueprint('data', __name__, url_prefix='/data')
 @key_auth
 def create():
     """
-    Data item recognition and saving logics
+    Datasource recognition and saving logics
     Expects
         content: string
     Returns
@@ -36,14 +37,15 @@ def create():
     if not content:
         return fmt_msg('Empty request')
 
-    if not 0 < len(content) < 200000:
+    if not 0 < len(content) < 300000:
         return fmt_msg('Request size is invalid')
 
     if not is_plain_text(content):
         #return fmt_msg('Request contains unsupported (non-latin) characters')
         content = unidecode(content)
 
-    fmt = detect_format(content)
+    fmt = request.values.get('fmt') or detect_format(content)
+    ase_obj, raw_obj, error = None, None, None
 
     if fmt == 'cif':
         ase_obj, error = cif_to_ase(content)
@@ -54,29 +56,54 @@ def create():
     elif fmt == 'optimade':
         ase_obj, error = optimade_to_ase(content)
 
+    elif fmt == 'xy':
+        raw_obj = get_pattern(content)
+
+        if not raw_obj: error = 'Not a valid pattern provided'
+
     else: return fmt_msg('Provided data format unsuitable or not recognized')
 
     if error: return fmt_msg(error)
 
-    if 'disordered' in ase_obj.info:
-        return fmt_msg('Structural disorder is currently not supported')
+    if ase_obj:
 
-    ase_obj, error = refine(ase_obj, conventional_cell=True)
-    if error:
-        return fmt_msg(error)
+        if 'disordered' in ase_obj.info:
+            return fmt_msg('Structural disorder is currently not supported')
 
-    formula = get_formula(ase_obj)
-    content = ase_serialize(ase_obj)
+        ase_obj, error = refine(ase_obj, conventional_cell=True)
+        if error:
+            return fmt_msg(error)
 
-    db = get_data_storage()
-    new_uuid = db.put_item(dict(name=formula), content, Data_type.structure)
-    db.close()
+        formula = get_formula(ase_obj)
+        content = ase_serialize(ase_obj)
 
-    return Response(json.dumps(dict(
-        uuid=new_uuid,
-        type=Data_type.structure,
-        name=html_formula(formula),
-    ), indent=4), content_type='application/json', status=200)
+        db = get_data_storage()
+        new_uuid = db.put_item(dict(name=html_formula(formula)), content, Data_type.structure)
+        db.close()
+
+        return Response(json.dumps(dict(
+            uuid=new_uuid,
+            type=Data_type.structure,
+            name=html_formula(formula),
+        ), indent=4), content_type='application/json', status=200)
+
+    elif raw_obj:
+
+        name = request.values.get('name') or get_pattern_name()
+        maxnamelen = 24
+        if len(name) > maxnamelen: name = name[:maxnamelen]
+
+        db = get_data_storage()
+        new_uuid = db.put_item(dict(name=name), raw_obj['content'], raw_obj['type'])
+        db.close()
+
+        return Response(json.dumps(dict(
+            uuid=new_uuid,
+            type=raw_obj['type'],
+            name=name,
+        ), indent=4), content_type='application/json', status=200)
+
+    else: abort(400)
 
 
 @bp_data.route("/listing", methods=['POST'])
@@ -123,7 +150,7 @@ def listing():
     items_mapping = {
         item['uuid']: dict(
             uuid=item['uuid'],
-            name=html_formula(item['metadata']['name']),
+            name=item['metadata']['name'],
             type=item['type']
         ) for item in items
     }
@@ -179,7 +206,7 @@ def examine():
 
     output = {}
 
-    if item['type'] == Data_type.property:
+    if item['type'] in (Data_type.property, Data_type.pattern):
 
         output['engine'] = item['metadata'].get('engine', 'default engine') # FIXME "default engine"
 

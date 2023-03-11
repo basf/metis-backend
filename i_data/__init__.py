@@ -18,6 +18,7 @@ class Data_type:
     calculation = 2
     property = 3
     workflow = 4
+    pattern = 5
 
 
 class Data_storage:

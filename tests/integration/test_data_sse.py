@@ -24,7 +24,7 @@ def submit_calc(comms, user_session):
     print(answer)
     data_id = sorted(answer['data'], key=lambda x: x['id'])[-1]['id'] # take the most recent id
 
-    make_request(bff_host + '/v0/calculations', {'dataId': data_id}, 'POST',
+    make_request(bff_host + '/v0/calculations', {'dataId': data_id, 'engine': 'dummy'}, 'POST',
         headers={'Cookie': user_session})
     print('=' * 100 + 'Calculation submitted')
 
