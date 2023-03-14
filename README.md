@@ -75,6 +75,37 @@ If you want start `metis-bff` in dev mode, run
 You can combine modes:
 `docker-compose -f compose.yml -f compose.dev-backend.yml -f compose.dev-bff.yml up`.
 
+
+## DB backups
+
+Before backup stop all services and run only `db` service
+```bash
+docker compose stop
+docker compose start db
+```
+
+Make a backup:
+```bash
+docker exec metis-db pg_dump -F c -U metis -h db -f /backups/db.dump metis
+```
+
+Copy a backup from a container to the host
+```bash
+docker cp metis-db:/backups/db.dump ./db.dump
+```
+
+To restore a DB, copy the backup to the DB container
+```bash
+docker cp ./db.dump metis-db:/backups/db.dump
+```
+
+
+Restore the DB
+```bash
+docker exec metis-db pg_restore -U metis -h db -c -d metis /backups/db.dump
+```
+
+
 ## License
 
 Copyright 2021-2023 BASF SE
