@@ -6,4 +6,4 @@ pip-selfcheck.json
 pip-log.txt
 pyvenv.cfg
 conf/env.ini
-./backups/*.*
+backups
