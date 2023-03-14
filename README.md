@@ -86,7 +86,8 @@ docker compose start db
 
 Make a backup:
 ```bash
-docker exec metis-db pg_dump -F c -U metis -h db -f /backups/db.dump metis
+docker exec metis-db mkdir /backups
+docker exec -e PGPASSWORD=password metis-db pg_dump -F c -U metis -h db -f /backups/db.dump metis
 ```
 
 Copy a backup from a container to the host
@@ -102,7 +103,7 @@ docker cp ./db.dump metis-db:/backups/db.dump
 
 Restore the DB
 ```bash
-docker exec metis-db pg_restore -U metis -h db -c -d metis /backups/db.dump
+docker exec -e PGPASSWORD=password metis-db pg_restore -U metis -h db -c -d metis /backups/db.dump
 ```
 
 
