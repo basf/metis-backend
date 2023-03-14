@@ -78,6 +78,11 @@ You can combine modes:
 
 ## DB backups
 
+Create a 'backups' directory
+```bash
+mkdir backups
+```
+
 Before backup stop all services and run only `db` service
 ```bash
 docker compose stop
@@ -92,12 +97,12 @@ docker exec -e PGPASSWORD=password metis-db pg_dump -F c -U metis -h db -f /back
 
 Copy a backup from a container to the host
 ```bash
-docker cp metis-db:/backups/db.dump ./db.dump
+docker cp metis-db:/backups/db.dump ./backups/db.dump
 ```
 
 To restore a DB, copy the backup to the DB container
 ```bash
-docker cp ./db.dump metis-db:/backups/db.dump
+docker cp ./backups/db.dump metis-db:/backups/db.dump
 ```
 
 
@@ -106,6 +111,19 @@ Restore the DB
 docker exec -e PGPASSWORD=password metis-db pg_restore -U metis -h db -c -d metis /backups/db.dump
 ```
 
+Restore DB from a plain-text dump
+```bash
+docker exec -e PGPASSWORD=password metis-db psql -U metis -h db -d metis \
+  -c "DROP SCHEMA public CASCADE;" \
+  -c "CREATE SCHEMA public;" \
+  -c "GRANT ALL ON SCHEMA public TO metos;" \
+  -c "GRANT ALL ON SCHEMA public TO public;" \
+  -c "COMMENT ON SCHEMA public IS 'standard public schema';"
+
+docker cp metis-db:/backups/db.sql ./backups/db.sql
+
+docker exec -e PGPASSWORD=password metis-db psql -U metis -h db -d metis < /backups/db.sql
+```
 
 ## License
 
