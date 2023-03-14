@@ -116,13 +116,13 @@ Restore DB from a plain-text dump
 docker exec -e PGPASSWORD=password metis-db psql -U metis -h db -d metis \
   -c "DROP SCHEMA public CASCADE;" \
   -c "CREATE SCHEMA public;" \
-  -c "GRANT ALL ON SCHEMA public TO metos;" \
+  -c "GRANT ALL ON SCHEMA public TO metis;" \
   -c "GRANT ALL ON SCHEMA public TO public;" \
   -c "COMMENT ON SCHEMA public IS 'standard public schema';"
 
-docker cp metis-db:/backups/db.sql ./backups/db.sql
+docker cp ./backups/db.sql metis-db:/backups/db.sql
 
-docker exec -e PGPASSWORD=password metis-db psql -U metis -h db -d metis < /backups/db.sql
+docker exec -e PGPASSWORD=password metis-db psql -U metis -h db -d metis -f /backups/db.sql
 ```
 
 ## License
