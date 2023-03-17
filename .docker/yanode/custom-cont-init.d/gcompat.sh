@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-apk add gcompat
+apk list -I | grep gcompat- || apk add gcompat
