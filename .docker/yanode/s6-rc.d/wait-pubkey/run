@@ -1,0 +1,10 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+# wait for public key
+if [ -d "$PUBLIC_KEY_DIR" ]; then
+    while [ -z "$(ls -A "$PUBLIC_KEY_DIR")" ]; do
+        echo "$PUBLIC_KEY_DIR is empty"
+        sleep 1
+    done
+fi
