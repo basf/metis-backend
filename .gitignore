@@ -1,6 +1,9 @@
 /bin
 /lib
 /lib64
+/doc
+/share
+/include
 *.py[co]
 pip-selfcheck.json
 pip-log.txt
