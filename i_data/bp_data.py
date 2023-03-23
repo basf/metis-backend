@@ -25,13 +25,13 @@ bp_data = Blueprint('data', __name__, url_prefix='/data')
 @key_auth
 def create():
     """
-    Datasource recognition and saving logics
-    Expects
-        content: string
-    Returns
-        JSON->error: string
-        or confirmation object
-        {object->uuid, object->type, object->name}
+    @api {post} /data/create create
+    @apiGroup Datasources
+    @apiDescription Datasource recognition and saving logics
+
+    @apiParam {String} content Crystal structure or pattern
+    @apiParam {String} [fmt] Format (only used xy for patterns)
+    @apiParam {String} [name] Title for content (only used for patterns)
     """
     content = request.values.get('content')
     if not content:
@@ -110,12 +110,11 @@ def create():
 @key_auth
 def listing():
     """
-    Expects
-        uuid: uuid or uuid[]
-    Returns
-        JSON->error: string
-        or listing
-        [ {object->uuid, object->type, object->name}, ... ]
+    @api {post} /data/listing listing
+    @apiGroup Datasources
+    @apiDescription Datasource listing
+
+    @apiParam {String/String[]} uuid What to consider
     """
     uuid = request.values.get('uuid')
     #current_app.logger.warning(uuid)
@@ -164,11 +163,11 @@ def listing():
 @key_auth
 def delete():
     """
-    Expects
-        uuid: uuid
-    Returns
-        JSON->error: string
-        or JSON empty dict
+    @api {post} /data/delete delete
+    @apiGroup Datasources
+    @apiDescription Datasource removal
+
+    @apiParam {String} uuid What to consider
     """
     uuid = request.values.get('uuid')
     if not uuid or not is_valid_uuid(uuid):
@@ -187,11 +186,11 @@ def delete():
 @key_auth
 def examine():
     """
-    Expects
-        uuid: uuid
-    Returns
-        JSON->error: string
-        or JSON empty dict
+    @api {post} /data/examine examine
+    @apiGroup Datasources
+    @apiDescription Datasource display
+
+    @apiParam {String} uuid What to consider
     """
     uuid = request.values.get('uuid')
     if not uuid or not is_valid_uuid(uuid):

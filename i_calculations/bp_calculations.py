@@ -27,13 +27,14 @@ setup = Calc_setup()
 @key_auth
 def create():
     """
-    Expects
-        uuid: uuid
-        engine: string, from scheduler engines supported
-        input: {inputname: inputdata, ...}, as per scheduler engines supported
-    Returns
-        JSON->error: string
-        or JSON {uuid}
+    @api {post} /calculations/create create
+    @apiGroup Calculations
+    @apiDescription Calculation start
+
+    @apiParam {String} uuid Datasource
+    @apiParam {String} engine Use engine from those supported by scheduler
+    @apiParam {Object} [input] Params as per scheduler engines supported: {inputname: inputdata, ...}
+    @apiParam {Boolean/String} [workflow] AiiDA integration
     """
     uuid = request.values.get('uuid')
     if not uuid or not is_valid_uuid(uuid):
@@ -111,11 +112,11 @@ def create():
 @key_auth
 def status():
     """
-    Expects
-        uuid: uuid or uuid[]
-    Returns
-        JSON->error::string
-        or JSON {progress}
+    @api {post} /calculations/status status
+    @apiGroup Calculations
+    @apiDescription Calculation status
+
+    @apiParam {String/String[]} uuid Datasource(s)
     """
     uuid = request.values.get('uuid')
     if not uuid:
@@ -221,13 +222,14 @@ def status():
 @webhook_auth
 def update():
     """
-    A scheduler webhooks handler, being a proxy to BFF and GUI
+    @api {post} /calculations/update update
+    @apiGroup Calculations
+    @apiDescription A scheduler webhooks handler, being a proxy to BFF
     Currently this is the only way to transition calcs in BFF (TODO?)
-    Expects
-        task_id: int
-        status: int
-    Returns
-        no content
+
+    @apiParam {Number} task_id Scheduler ID
+    @apiParam {Number} status Scheduler state
+    @apiParam {Object} [custom_params] Currently, calculation provenance details
     """
     try:
         task_id = int(request.values.get('task_id'))
@@ -306,11 +308,11 @@ def update():
 @key_auth
 def delete():
     """
-    Expects
-        uuid: uuid
-    Returns
-        JSON->error: string
-        or JSON {uuid}
+    @api {post} /calculations/delete delete
+    @apiGroup Calculations
+    @apiDescription Calculation removal
+
+    @apiParam {String} uuid Datasource
     """
     #raise NotImplementedError
     return Response('{}', content_type='application/json', status=200)
@@ -319,11 +321,11 @@ def delete():
 @bp_calculations.route("/template", methods=['GET'])
 def template():
     """
-    Expects
-        engine: string, one from the engines supported
-    Returns
-        JSON->error: string
-        or JSON {template}
+    @api {get} /calculations/template template
+    @apiGroup Calculations
+    @apiDescription Get calculation defaults
+
+    @apiParam {String} engine One from the scheduler engines supported
     """
     engine = request.values.get('engine')
     if not engine:
@@ -339,8 +341,9 @@ def template():
 @bp_calculations.route("/supported", methods=['GET'])
 def supported():
     """
-    Returns list of the supported engines,
-    e.g.
+    @api {get} /calculations/supported supported
+    @apiGroup Calculations
+    @apiDescription Get list of the supported scheduler engines, e.g.
     ["dummy", "dummy+workflow", "pcrystal", "pcrystal+workflow", "gulp", "topas"]
     """
     return Response(json.dumps(list(yac.config.engines.keys())),

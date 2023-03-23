@@ -1,0 +1,14 @@
+{
+	"name": "metis-backend",
+	"title": "Metis scientific server",
+	"description": "Metis scientific server",
+	"template": {
+		"withCompare": false,
+		"showRequiredLabels": false,
+		"aloneDisplay": true
+	},
+	"order": [
+		"Datasources",
+		"Calculations"
+	]
+}
