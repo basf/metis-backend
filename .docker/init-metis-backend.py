@@ -43,7 +43,7 @@ with cfg_path.open("w") as fp:
     cfg.write(fp)
 
 log.info("Initialize database...")
-schema = (Path(__file__).parent.parent / "i_data" / "schema.sql").read_text()
+schema = (Path(__file__).parent.parent / "schema" / "schema.sql").read_text()
 db = DB(
     user=cfg["db"]["user"],
     host=cfg["db"]["host"],

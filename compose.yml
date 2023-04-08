@@ -18,20 +18,6 @@ services:
       timeout: 5s
       retries: 10
 
-  rabbitmq:
-    container_name: metis-rmq
-    image: docker.io/library/rabbitmq:3.8.14-management
-    environment:
-      RABBITMQ_DEFAULT_USER: &rabbituser guest
-      RABBITMQ_DEFAULT_PASS: &rabbitpass guest
-    volumes:
-      - rmq-data:/var/lib/rabbitmq/
-    healthcheck:
-      test: rabbitmq-diagnostics -q ping
-      interval: 30s
-      timeout: 30s
-      retries: 5
-
   adminer:
     container_name: metis-adminer
     depends_on: ["db"]
@@ -53,14 +39,7 @@ services:
       PGHOST: db
       PGPASSWORD: *dbpassword
       PGUSER: *dbuser
-      RMQHOST: rabbitmq
-      RMQPASSWORD: *rabbitpass
-      RMQUSER: *rabbituser
       TZ: Europe/Berlin
-      USER_EMAIL: aiida@localhost
-      USER_FIRST_NAME: Giuseppe
-      USER_LAST_NAME: Verdi
-      USER_INSTITUTION: LaScala
       HOST: "0.0.0.0"
       API_KEY: &apikey a-very-very-very-long-and-very-very-very-secret-string
       WEBHOOKS_KEY: &webhookskey another-very-very-long-and-very-very-very-secret-string

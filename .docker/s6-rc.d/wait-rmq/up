@@ -1,8 +1,0 @@
-#!/command/execlineb -P
-foreground { echo Wainting for rabbitmq... }
-
-with-contenv
-importas -D "rabbitmq"  HOST RMQHOST
-importas -D "5672"      PORT RMQPORT
-
-wait-for-it ${HOST}:$PORT --timeout=60 --strict -- echo "rabbitmq is up"

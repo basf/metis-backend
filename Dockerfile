@@ -16,8 +16,6 @@ ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME 0
 COPY .docker/s6-rc.d/ /etc/s6-overlay/s6-rc.d
 ENTRYPOINT ["/init"]
 
-ENV AIIDA_REPO /data/aiida
-
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
