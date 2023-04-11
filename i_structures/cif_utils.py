@@ -1,5 +1,5 @@
 
-import tempfile # used by pycodcif; FIXME
+import tempfile # FIXME remove as soon as pycodcif deals with the file in string
 import re
 
 import numpy as np

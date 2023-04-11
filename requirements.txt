@@ -4,7 +4,6 @@
 pg8000
 flask
 netius
-ujson
 unidecode
 
 # Scientific part

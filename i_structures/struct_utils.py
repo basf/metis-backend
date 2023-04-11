@@ -1,6 +1,7 @@
 
 import math
 import re
+import json
 import random
 import pickle
 import base64
@@ -8,7 +9,6 @@ import itertools
 from functools import reduce
 from io import StringIO
 
-import ujson as json
 from ase.atoms import Atom, Atoms
 from ase.io.vasp import read_vasp
 from ase.spacegroup import crystal

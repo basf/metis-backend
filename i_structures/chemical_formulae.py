@@ -1,5 +1,3 @@
-# Copyright (c) Evgeny Blokhin, 2016-2019
-# Distributed under MIT license, see LICENSE file.
 
 from collections import defaultdict
 
@@ -8,6 +6,7 @@ from pyparsing import (
     ParseResults,
     ParseException as FormulaError
 )
+
 from ase.data import chemical_symbols
 
 
