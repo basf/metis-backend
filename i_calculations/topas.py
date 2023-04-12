@@ -1,4 +1,3 @@
-
 import random
 import string
 
@@ -14,7 +13,8 @@ def get_pattern(resource):
     """
     output = []
 
-    try: f = open(resource)
+    try:
+        f = open(resource)
     except OSError:
         for line in resource.splitlines():
             try:
@@ -36,7 +36,6 @@ def get_pattern(resource):
         f.close()
 
     if output:
-
         # normalize
         ymax = max([y for _, y in output])
         output = [[x, int(round(y / ymax * 200))] for x, y in output]
@@ -54,12 +53,11 @@ def get_pattern_name():
 
 
 if __name__ == "__main__":
-
     import os, sys
 
     for item in os.listdir(sys.argv[1]):
         result = get_pattern(os.path.join(sys.argv[1], item))
         if result:
-            print(item, len(result.get('value')))
+            print(item, len(result.get("value")))
         else:
-            print(item, 'Nothing found')
+            print(item, "Nothing found")
