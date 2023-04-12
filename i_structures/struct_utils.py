@@ -1,4 +1,3 @@
-
 import math
 import re
 import json
@@ -21,21 +20,25 @@ def detect_format(string):
     Detect CIF, POSCAR, or Optimade
     checking the most common features
     """
-    if '_cell_angle_gamma' in string \
-    and 'loop_' in string:
-        return 'cif'
+    if "_cell_angle_gamma" in string and "loop_" in string:
+        return "cif"
 
     lines = string.splitlines()
 
     for nline in [6, 7, 8]:
         if len(lines) <= nline:
             break
-        if lines[nline].strip().lower().startswith('direct') \
-        or lines[nline].strip().lower().startswith('cart'):
-            return 'poscar'
+        if lines[nline].strip().lower().startswith("direct") or lines[
+            nline
+        ].strip().lower().startswith("cart"):
+            return "poscar"
 
-    if '"immutable_id"' in string and '"cartesian_site_positions"' in string and '"lattice_vectors"' in string:
-        return 'optimade'
+    if (
+        '"immutable_id"' in string
+        and '"cartesian_site_positions"' in string
+        and '"lattice_vectors"' in string
+    ):
+        return "optimade"
 
     return None
 
@@ -53,9 +56,9 @@ def poscar_to_ase(poscar_string):
     try:
         ase_obj = read_vasp(buff)
     except AttributeError:
-        error = 'Types of atoms can be neither found nor inferred'
+        error = "Types of atoms can be neither found nor inferred"
     except Exception:
-        error = 'Cannot process POSCAR: invalid or missing data'
+        error = "Cannot process POSCAR: invalid or missing data"
     buff.close()
     return ase_obj, error
 
@@ -71,8 +74,13 @@ def json_to_ase(datarow):
     if not datarow or not datarow[-1]:
         return None, "No structure found"
 
-    occs_noneq, cell_abc, sg_n, basis_noneq, els_noneq = \
-        datarow[-5], datarow[-4], int(datarow[-3]), datarow[-2], datarow[-1]
+    occs_noneq, cell_abc, sg_n, basis_noneq, els_noneq = (
+        datarow[-5],
+        datarow[-4],
+        int(datarow[-3]),
+        datarow[-2],
+        datarow[-1],
+    )
 
     occ_data = None
     if any([occ != 1 for occ in occs_noneq]):
@@ -81,7 +89,9 @@ def json_to_ase(datarow):
             if occs_noneq[n] != 1:
                 disordered_pos = basis_noneq.pop(n)
                 disordered_el = els_noneq.pop(n)
-                partial_pos.setdefault(tuple(disordered_pos), {})[disordered_el] = occs_noneq[n]
+                partial_pos.setdefault(tuple(disordered_pos), {})[
+                    disordered_el
+                ] = occs_noneq[n]
 
         for xyz, occs in partial_pos.items():
             index = len(els_noneq)
@@ -98,14 +108,17 @@ def json_to_ase(datarow):
         return None, "No atoms found"
 
     try:
-        return crystal(
-            atom_data,
-            spacegroup=sg_n,
-            cellpar=cell_abc,
-            primitive_cell=True,
-            onduplicates='error',
-            info=dict(disordered=occ_data) if occ_data else {}
-        ), None
+        return (
+            crystal(
+                atom_data,
+                spacegroup=sg_n,
+                cellpar=cell_abc,
+                primitive_cell=True,
+                onduplicates="error",
+                info=dict(disordered=occ_data) if occ_data else {},
+            ),
+            None,
+        )
     except Exception as ex:
         return None, "ASE cannot handle structure: %s" % ex
 
@@ -122,57 +135,64 @@ def optimade_to_ase(structure, skip_disorder=False):
     if type(structure) == str:
         structure = json.loads(structure)
 
-    #if 'cartesian_site_positions' not in structure['attributes'] or 'lattice_vectors' not in structure['attributes']:
+    # if 'cartesian_site_positions' not in structure['attributes'] or 'lattice_vectors' not in structure['attributes']:
     #    return None, "Invalid structure"
 
-    if 'data' in structure and type(structure['data']) == list and len(structure['data']):
-        structure = structure['data'][0]
+    if (
+        "data" in structure
+        and type(structure["data"]) == list
+        and len(structure["data"])
+    ):
+        structure = structure["data"][0]
 
     elems_src, atom_data, atom_meta = [], [], {}
 
     # The field *species* might contain all the atoms,
     # but it also might contain only the distinct atoms;
     # in the latter case we have to link *species_at_sites* <-> *species* (TODO)
-    if 'species' in structure['attributes']:
-        for n, specie in enumerate(structure['attributes']['species']):
+    if "species" in structure["attributes"]:
+        for n, specie in enumerate(structure["attributes"]["species"]):
             # account isotopes
-            if specie['chemical_symbols'][0] == 'D':
-                specie['chemical_symbols'][0] = 'H'
-                atom_meta[n] = 'D'
+            if specie["chemical_symbols"][0] == "D":
+                specie["chemical_symbols"][0] = "H"
+                atom_meta[n] = "D"
 
-            elems_src.append(specie['chemical_symbols'][0])
+            elems_src.append(specie["chemical_symbols"][0])
 
-            if not skip_disorder and len(specie['chemical_symbols']) > 1:
-                if 'concentration' not in specie:
+            if not skip_disorder and len(specie["chemical_symbols"]) > 1:
+                if "concentration" not in specie:
                     return None, "Atomic disorder data incomplete"
 
                 return None, "Structural disorder is not supported"
 
-    if len(structure['attributes'].get('species', [])) != len(structure['attributes']['cartesian_site_positions']):
-        elems_src = structure['attributes'].get('species_at_sites',
-            structure['attributes'].get('elements', [])
+    if len(structure["attributes"].get("species", [])) != len(
+        structure["attributes"]["cartesian_site_positions"]
+    ):
+        elems_src = structure["attributes"].get(
+            "species_at_sites", structure["attributes"].get("elements", [])
         )
 
-    for n, pos in enumerate(structure['attributes']['cartesian_site_positions']):
+    for n, pos in enumerate(structure["attributes"]["cartesian_site_positions"]):
         try:
-            atom_data.append(
-                Atom(extract_chemical_element(elems_src[n]), pos)
-            )
-        except KeyError as exc: # TODO link *species_at_sites* <-> *species*
+            atom_data.append(Atom(extract_chemical_element(elems_src[n]), pos))
+        except KeyError as exc:  # TODO link *species_at_sites* <-> *species*
             return None, "Unrecognized atom symbol: %s" % exc
 
     if not atom_data:
         return None, "Atoms missing"
 
-    return Atoms(
-        atom_data,
-        cell=structure['attributes']['lattice_vectors'],
-        pbc=structure['attributes'].get('dimension_types') or True,
-        info=dict(isotopes=atom_meta) if atom_meta else {}
-    ), None
+    return (
+        Atoms(
+            atom_data,
+            cell=structure["attributes"]["lattice_vectors"],
+            pbc=structure["attributes"].get("dimension_types") or True,
+            info=dict(isotopes=atom_meta) if atom_meta else {},
+        ),
+        None,
+    )
 
 
-def refine(ase_obj, accuracy=1E-03, conventional_cell=False):
+def refine(ase_obj, accuracy=1e-03, conventional_cell=False):
     """
     Refine ASE structure using spglib
 
@@ -184,34 +204,131 @@ def refine(ase_obj, accuracy=1E-03, conventional_cell=False):
         Refined ASE structure (object) *or* None
         None *or* error (str)
     """
-    spg_result = spglib.standardize_cell(ase_obj, symprec=accuracy, to_primitive=not conventional_cell)
+    spg_result = spglib.standardize_cell(
+        ase_obj, symprec=accuracy, to_primitive=not conventional_cell
+    )
     if not spg_result or len(spg_result) != 3:
-        return None, f'Error in structure refinement, spglib returned {spg_result}'
+        return None, f"Error in structure refinement, spglib returned {spg_result}"
     lattice, positions, numbers = spg_result
 
     symmetry = spglib.get_spacegroup(ase_obj, symprec=accuracy)
     try:
-        spacegroup = int( symmetry.split()[1].replace("(", "").replace(")", "") )
+        spacegroup = int(symmetry.split()[1].replace("(", "").replace(")", ""))
     except (ValueError, IndexError, AttributeError):
-        return None, 'Symmetry error (coinciding atoms?) in structure'
+        return None, "Symmetry error (coinciding atoms?) in structure"
 
     try:
-        return crystal(
-            Atoms(
-                numbers=numbers,
-                cell=lattice,
-                scaled_positions=positions,
-                pbc=True
+        return (
+            crystal(
+                Atoms(
+                    numbers=numbers, cell=lattice, scaled_positions=positions, pbc=True
+                ),
+                spacegroup=spacegroup,
+                primitive_cell=not conventional_cell,
+                onduplicates="replace",
             ),
-            spacegroup=spacegroup,
-            primitive_cell=not conventional_cell,
-            onduplicates='replace'
-        ), None
+            None,
+        )
     except:
-        return None, 'Unrecognized sites or invalid site symmetry in structure'
+        return None, "Unrecognized sites or invalid site symmetry in structure"
 
 
-FORMULA_SEQUENCE = ['Fr','Cs','Rb','K','Na','Li',  'Be','Mg','Ca','Sr','Ba','Ra',  'Sc','Y','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb',  'Ac','Th','Pa','U','Np','Pu',  'Ti','Zr','Hf',  'V','Nb','Ta',  'Cr','Mo','W',  'Fe','Ru','Os',  'Co','Rh','Ir',  'Mn','Tc','Re',  'Ni','Pd','Pt',  'Cu','Ag','Au',  'Zn','Cd','Hg',  'B','Al','Ga','In','Tl',  'Pb','Sn','Ge','Si','C',   'N','P','As','Sb','Bi',   'H',   'Po','Te','Se','S','O',  'At','I','Br','Cl','F',  'He','Ne','Ar','Kr','Xe','Rn']
+FORMULA_SEQUENCE = [
+    "Fr",
+    "Cs",
+    "Rb",
+    "K",
+    "Na",
+    "Li",
+    "Be",
+    "Mg",
+    "Ca",
+    "Sr",
+    "Ba",
+    "Ra",
+    "Sc",
+    "Y",
+    "La",
+    "Ce",
+    "Pr",
+    "Nd",
+    "Pm",
+    "Sm",
+    "Eu",
+    "Gd",
+    "Tb",
+    "Dy",
+    "Ho",
+    "Er",
+    "Tm",
+    "Yb",
+    "Ac",
+    "Th",
+    "Pa",
+    "U",
+    "Np",
+    "Pu",
+    "Ti",
+    "Zr",
+    "Hf",
+    "V",
+    "Nb",
+    "Ta",
+    "Cr",
+    "Mo",
+    "W",
+    "Fe",
+    "Ru",
+    "Os",
+    "Co",
+    "Rh",
+    "Ir",
+    "Mn",
+    "Tc",
+    "Re",
+    "Ni",
+    "Pd",
+    "Pt",
+    "Cu",
+    "Ag",
+    "Au",
+    "Zn",
+    "Cd",
+    "Hg",
+    "B",
+    "Al",
+    "Ga",
+    "In",
+    "Tl",
+    "Pb",
+    "Sn",
+    "Ge",
+    "Si",
+    "C",
+    "N",
+    "P",
+    "As",
+    "Sb",
+    "Bi",
+    "H",
+    "Po",
+    "Te",
+    "Se",
+    "S",
+    "O",
+    "At",
+    "I",
+    "Br",
+    "Cl",
+    "F",
+    "He",
+    "Ne",
+    "Ar",
+    "Kr",
+    "Xe",
+    "Rn",
+]
+
 
 def get_formula(ase_obj, find_gcd=True, as_dict=False):
     parsed_formula = {}
@@ -224,41 +341,46 @@ def get_formula(ase_obj, find_gcd=True, as_dict=False):
 
     expanded = reduce(math.gcd, parsed_formula.values()) if find_gcd else 1
     if expanded > 1:
-        parsed_formula = {el: int(content / float(expanded))
-                        for el, content in parsed_formula.items()}
+        parsed_formula = {
+            el: int(content / float(expanded)) for el, content in parsed_formula.items()
+        }
 
-    if as_dict: return parsed_formula
+    if as_dict:
+        return parsed_formula
 
     atoms = parsed_formula.keys()
-    atoms = [x for x in FORMULA_SEQUENCE if x in atoms] + [x for x in atoms if x not in FORMULA_SEQUENCE]
-    formula = ''
+    atoms = [x for x in FORMULA_SEQUENCE if x in atoms] + [
+        x for x in atoms if x not in FORMULA_SEQUENCE
+    ]
+    formula = ""
     for atom in atoms:
         index = parsed_formula[atom]
-        index = '' if index == 1 else str(index)
+        index = "" if index == 1 else str(index)
         formula += atom + index
 
     return formula
 
 
 def sgn_to_crsystem(number):
-    if   195 <= number <= 230:
-        return 'cubic'
+    if 195 <= number <= 230:
+        return "cubic"
     elif 168 <= number <= 194:
-        return 'hexagonal'
+        return "hexagonal"
     elif 143 <= number <= 167:
-        return 'trigonal'
-    elif 75  <= number <= 142:
-        return 'tetragonal'
-    elif 16  <= number <= 74:
-        return 'orthorhombic'
-    elif 3   <= number <= 15:
-        return 'monoclinic'
+        return "trigonal"
+    elif 75 <= number <= 142:
+        return "tetragonal"
+    elif 16 <= number <= 74:
+        return "orthorhombic"
+    elif 3 <= number <= 15:
+        return "monoclinic"
     else:
-        return 'triclinic'
+        return "triclinic"
 
 
 MAX_ATOMS = 1000
 SITE_SUM_OCCS_TOL = 0.99
+
 
 def order_disordered(ase_obj):
     """
@@ -279,31 +401,28 @@ def order_disordered(ase_obj):
     TODO?
     Rewrite space group info accordingly
     """
-    for index in ase_obj.info['disordered']:
-        if sum(ase_obj.info['disordered'][index].values()) < SITE_SUM_OCCS_TOL:
-            ase_obj.info['disordered'][index].update(
-                {'X': 1 - sum(ase_obj.info['disordered'][index].values())}
+    for index in ase_obj.info["disordered"]:
+        if sum(ase_obj.info["disordered"][index].values()) < SITE_SUM_OCCS_TOL:
+            ase_obj.info["disordered"][index].update(
+                {"X": 1 - sum(ase_obj.info["disordered"][index].values())}
             )
 
     min_occ = min(
-        sum(
-            [list(item.values()) for item in ase_obj.info['disordered'].values()],
-            []
-        )
+        sum([list(item.values()) for item in ase_obj.info["disordered"].values()], [])
     )
     if min_occ == 0:
-        return None, 'Zero occupancy is encountered'
+        return None, "Zero occupancy is encountered"
 
-    needed_det = math.ceil(1. / min_occ)
+    needed_det = math.ceil(1.0 / min_occ)
     if needed_det * len(ase_obj) > MAX_ATOMS:
-        return None, 'Resulting crystal cell size is too big'
+        return None, "Resulting crystal cell size is too big"
 
-    diag = needed_det ** (1. / 3)
+    diag = needed_det ** (1.0 / 3)
     supercell_matrix = [int(x) for x in (round(diag), math.ceil(diag), math.ceil(diag))]
     actual_det = reduce(lambda x, y: x * y, supercell_matrix)
 
     occ_data = {}
-    for index, occs in ase_obj.info['disordered'].items():
+    for index, occs in ase_obj.info["disordered"].items():
         disorder = []
         for el, occ in occs.items():
             disorder += [el] * int(round(occ * actual_det))
@@ -312,19 +431,19 @@ def order_disordered(ase_obj):
 
     order_obj = ase_obj.copy()
     order_obj *= supercell_matrix
-    del order_obj.info['disordered']
+    del order_obj.info["disordered"]
 
     for index, occs in occ_data.items():
         for n in range(len(order_obj) - 1, -1, -1):
             if order_obj[n].tag == index:
                 distrib_el = next(occs)
-                if distrib_el == 'X':
+                if distrib_el == "X":
                     del order_obj[n]
                 else:
                     try:
                         order_obj[n].symbol = distrib_el
                     except KeyError as exc:
-                        return None, 'Unrecognized atom symbol: %s' % exc
+                        return None, "Unrecognized atom symbol: %s" % exc
 
     return order_obj, None
 
@@ -334,7 +453,7 @@ def extract_chemical_element(str):
 
 
 def ase_serialize(ase_obj):
-    return base64.b64encode(pickle.dumps(ase_obj, protocol=4)).decode('ascii')
+    return base64.b64encode(pickle.dumps(ase_obj, protocol=4)).decode("ascii")
 
 
 def ase_unserialize(string):
@@ -342,21 +461,21 @@ def ase_unserialize(string):
 
 
 if __name__ == "__main__":
-
     from ase.spacegroup import crystal
 
     crystal_obj = crystal(
-        ('Sr', 'Ti', 'O', 'O'),
+        ("Sr", "Ti", "O", "O"),
         basis=[(0, 0.5, 0.25), (0, 0, 0), (0, 0, 0.25), (0.255, 0.755, 0)],
-        spacegroup=140, cellpar=[5.511, 5.511, 7.796, 90, 90, 90],
-        primitive_cell=True
+        spacegroup=140,
+        cellpar=[5.511, 5.511, 7.796, 90, 90, 90],
+        primitive_cell=True,
     )
-    #print(crystal_obj)
+    # print(crystal_obj)
 
     repr = ase_serialize(crystal_obj)
-    #print(repr)
+    # print(repr)
 
     new_obj = ase_unserialize(repr)
-    #print(new_obj)
+    # print(new_obj)
 
     assert new_obj == crystal_obj
