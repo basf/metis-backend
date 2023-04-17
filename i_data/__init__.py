@@ -81,9 +81,7 @@ class Data_storage:
                 )
             )
             for link in self.cursor.fetchall():
-                children.append(str(link[0])) if link[0] else parents.append(
-                    str(link[1])
-                )
+                children.append(str(link[1])) if link[1] else parents.append(str(link[0]))
 
         return dict(
             uuid=str(row[0]),
@@ -127,9 +125,8 @@ class Data_storage:
                 )
             )
             for row in self.cursor.fetchall():
-                items[str(row[0])]["children"].append(str(row[1])) if row[1] else items[
-                    str(row[0])
-                ]["parents"].append(str(row[2]))
+                items[str(row[0])]["children"].append(str(row[2])) if row[2] \
+                    else items[str(row[0])]["parents"].append(str(row[1]))
 
         return list(items.values())
 
