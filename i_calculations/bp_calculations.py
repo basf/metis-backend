@@ -204,8 +204,9 @@ def status():
         if not found or len(found) > 1:
             return fmt_msg("Internal error, task(s) lost", 500)
 
-        calc_uuid = found[0]["uuid"]
-        calc_name = found[0]["metadata"]["name"]
+        calc_uuid =   found[0]["uuid"]
+        calc_name =   found[0]["metadata"]["name"]
+        calc_parent = found[0]["metadata"]["parent"]
 
         if task["status"] == Yascheduler.STATUS_TO_DO:
             progress = _scheduler_status_mapping[task["status"]]
@@ -214,8 +215,7 @@ def status():
             progress = _scheduler_status_mapping[task["status"]]
 
         else:
-            parent = found[0]["metadata"]["parent"]
-            if not db.get_sources(parent):
+            if not db.get_sources(calc_parent):
                 # Should we handle results here? TODO?
                 current_app.logger.critical("Listing precedes hook")
 
@@ -225,6 +225,7 @@ def status():
             uuid=calc_uuid,
             type=Data_type.calculation,
             name=html_formula(calc_name),
+            parent=calc_parent,
             progress=progress,
         )
 
