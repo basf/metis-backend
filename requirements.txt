@@ -15,4 +15,4 @@ scipy
 ase
 pycodcif
 spglib
-yascheduler >= 1.0.8
+yascheduler >= 1.0.10
