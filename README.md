@@ -37,7 +37,7 @@ bash conf/aiida_setup.sh
 
 Then setup your virtual env, if needed, and install the Python requirements `pip install -r requirements.txt`.
 
-Finally, apply the database schema: `/data/pg/bin/psql -U postgres -d metis -f i_data/schema.sql`.
+Finally, apply the database schema: `/data/pg/bin/psql -U postgres -d metis -f schema/schema.sql`.
 
 ## Running
 
@@ -74,56 +74,6 @@ If you want start `metis-bff` in dev mode, run
 `docker-compose -f compose.yml -f compose.dev-bff.yml up`.
 You can combine modes:
 `docker-compose -f compose.yml -f compose.dev-backend.yml -f compose.dev-bff.yml up`.
-
-
-## DB backups
-
-Create a 'backups' directory
-```bash
-mkdir backups
-```
-
-Before backup stop all services and run only `db` service
-```bash
-docker compose stop
-docker compose start db
-```
-
-Make a backup:
-```bash
-docker exec metis-db mkdir /backups
-docker exec -e PGPASSWORD=password metis-db pg_dump -F c -U metis -h db -f /backups/db.dump metis
-```
-
-Copy a backup from a container to the host
-```bash
-docker cp metis-db:/backups/db.dump ./backups/db.dump
-```
-
-To restore a DB, copy the backup to the DB container
-```bash
-docker cp ./backups/db.dump metis-db:/backups/db.dump
-```
-
-
-Restore the DB
-```bash
-docker exec -e PGPASSWORD=password metis-db pg_restore -U metis -h db -c -d metis /backups/db.dump
-```
-
-Restore DB from a plain-text dump
-```bash
-docker exec -e PGPASSWORD=password metis-db psql -U metis -h db -d metis \
-  -c "DROP SCHEMA public CASCADE;" \
-  -c "CREATE SCHEMA public;" \
-  -c "GRANT ALL ON SCHEMA public TO metis;" \
-  -c "GRANT ALL ON SCHEMA public TO public;" \
-  -c "COMMENT ON SCHEMA public IS 'standard public schema';"
-
-docker cp ./backups/db.sql metis-db:/backups/db.sql
-
-docker exec -e PGPASSWORD=password metis-db psql -U metis -h db -d metis -f /backups/db.sql
-```
 
 ## License
 
