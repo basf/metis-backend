@@ -6,8 +6,8 @@ from i_data import Data_type
 
 def get_pattern(resource):
     """
-    Check if a file / given string contains computed xrpd pattern
-    (two columns of floats)
+    Check if a file / given string contains computed XRPD pattern
+    (basicaly, two columns of floats)
     TODO
     process large patterns in-place leaving only their integral feature
     """
@@ -17,27 +17,29 @@ def get_pattern(resource):
         f = open(resource)
     except OSError:
         for line in resource.splitlines():
+            if line.startswith("END"): # FullProf fmt
+                break
             try:
                 output.append([float(item) for item in line.split(maxsplit=1)])
             except ValueError:
-                output = False
-                break
+                continue
 
     else:
         while True:
             line = f.readline()
-            if not line:
+            if not line or line.startswith("END"): # FullProf fmt
                 break
             try:
                 output.append([float(item) for item in line.split(maxsplit=1)])
             except ValueError:
-                output = False
-                break
+                continue
         f.close()
 
     if output:
-        # normalize
-        ymax = max([y for _, y in output])
+
+        try: ymax = max([y for _, y in output]) # normalize
+        except ValueError: return None
+
         output = [[x, int(round(y / ymax * 200))] for x, y in output]
         return dict(content=output, type=Data_type.pattern)
 
@@ -58,6 +60,6 @@ if __name__ == "__main__":
     for item in os.listdir(sys.argv[1]):
         result = get_pattern(os.path.join(sys.argv[1], item))
         if result:
-            print(item, len(result.get("value")))
+            print(item, len(result.get("content")))
         else:
             print(item, "Nothing found")

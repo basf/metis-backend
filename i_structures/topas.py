@@ -73,7 +73,10 @@ def topas_to_ase(content):
     spg = None
     topas_params = {}
 
-    sg_topas2ase = {"C 1 2/m 1": "C 2/m", "P 1 21/n 1": "P 21/n"}
+    sg_topas2ase = {
+        "C 1 2/m 1": "C 2/m",
+        "P 1 21/n 1": "P 21/n",
+    }
 
     for line in content.splitlines():
         cmp = line.strip().lower().split("'")[0]

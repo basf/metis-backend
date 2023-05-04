@@ -4,9 +4,10 @@ import json
 
 from yascheduler import Yascheduler
 
-from i_calculations.topas import get_pattern
+from i_calculations.xrpd import get_pattern
 from i_data import Data_type
 from i_structures.topas import ase_to_topas
+from i_structures.fullprof import ase_to_fullprof
 
 
 _scheduler_status_mapping = {
@@ -15,12 +16,14 @@ _scheduler_status_mapping = {
     Yascheduler.STATUS_DONE: 100,
 }
 
+SUPPORTED_ENGINES = ["dummy", "topas", "fullprof"]
+
 
 class Calc_setup:
     schemata = {}
     templates = {}
 
-    for engine in ["topas", "dummy"]:
+    for engine in SUPPORTED_ENGINES:
         with open(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)), "schemata/%s.json" % engine
@@ -50,10 +53,20 @@ class Calc_setup:
         error = None
 
         if engine == "topas":
+
             result = {
                 "calc.inp": self.get_input(engine),
                 "structure.inc": ase_to_topas(ase_obj),
             }
+
+        elif engine == "fullprof":
+
+            atoms_input, cell_input = ase_to_fullprof(ase_obj)
+            template = self.get_input(engine)
+            template = template.replace("{{template.title}}", name)
+            template = template.replace("{{template.phase}}", atoms_input)
+            template = template.replace("{{template.cell}}", cell_input)
+            result = {"calc.pcr": template}
 
         else:
             result = {
@@ -69,6 +82,7 @@ class Calc_setup:
 
         parsers = {
             "topas": get_pattern,
+            "fullprof": get_pattern,
         }
         default_parser = lambda x: {"content": 42}
         parser = parsers.get(engine, default_parser)

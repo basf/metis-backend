@@ -18,7 +18,7 @@ from i_structures.struct_utils import (
     ase_unserialize,
 )
 from i_structures.cif_utils import cif_to_ase
-from i_calculations.topas import get_pattern, get_pattern_name
+from i_calculations.xrpd import get_pattern, get_pattern_name
 
 from utils import get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
 

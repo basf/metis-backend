@@ -1,5 +1,6 @@
 import tempfile  # FIXME remove as soon as pycodcif deals with the file in string
 import re
+#from io import StringIO
 
 import numpy as np
 
@@ -8,6 +9,7 @@ from pycodcif import parse
 from ase import Atom
 from ase.spacegroup import crystal
 from ase.geometry import cell_to_cellpar
+#from ase.io import read as ase_read
 
 
 def cif_to_ase(cif_string):
@@ -139,6 +141,9 @@ def cif_to_ase(cif_string):
         )
     except:
         return None, "Unrecognized sites or invalid site symmetry in CIF"
+
+    #cif_file = StringIO(cif_string)
+    #return ase_read(cif_file, format='cif', fractional_occupancies=True), None
 
 
 def ase_to_eq_cif(ase_obj, supply_sg=True):

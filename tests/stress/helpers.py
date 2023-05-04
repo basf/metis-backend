@@ -3,7 +3,7 @@ import random
 import set_path
 from i_data import Data_type
 from i_structures.chemical_formulae import common_chem_elements
-from i_calculations.topas import get_pattern_name
+from i_calculations.xrpd import get_pattern_name
 
 
 common_chem_elements = common_chem_elements.split()
