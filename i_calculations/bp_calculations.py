@@ -57,7 +57,7 @@ def create():
     db = get_data_storage()
     node = db.get_item(uuid)
     if not node:
-        return fmt_msg("No such content", 204)
+        return fmt_msg("No such content", 400)
 
     if node["type"] != Data_type.structure:  # FIXME
         return fmt_msg("The item of this type cannot be used for calculation", 400)
@@ -67,10 +67,10 @@ def create():
     if error:
         return fmt_msg(error, 503)
 
-    # inject user-defined inputs
+    # inject user-defined input to override calculation
     user_input_files = request.values.get("input")
     if user_input_files:
-        # TODO only the first (main) input is currently considered
+        # TODO only the first (main) input is currently overridden
         input_data[yac.config.engines[engine].input_files[0]] = user_input_files
         current_app.logger.warning("Custom input requested:")
         current_app.logger.warning(input_data)
@@ -373,21 +373,41 @@ def delete():
     return Response("{}", content_type="application/json", status=200)
 
 
-@bp_calculations.route("/template", methods=["GET"])
+@bp_calculations.route("/template", methods=["POST"])
+@key_auth
 def template():
     """
-    @api {get} /calculations/template template
+    @api {post} /calculations/template template
     @apiGroup Calculations
-    @apiDescription Get calculation defaults
+    @apiDescription Get calculation defaults to be overridden in a submission
 
-    @apiParam {String} engine One from the scheduler engines supported
+    @apiParam {String} uuid Datasource
+    @apiParam {String} engine Use engine from those supported by scheduler
     """
+    uuid = request.values.get("uuid")
+    if not uuid or not is_valid_uuid(uuid):
+        return fmt_msg("Empty or invalid request", 400)
+
     engine = request.values.get("engine")
     if not engine:
         engine = "dummy"
 
+    db = get_data_storage()
+    node = db.get_item(uuid)
+    db.close()
+    if not node:
+        return fmt_msg("No such content", 400)
+
+    if node["type"] != Data_type.structure:
+        return fmt_msg("The item of this type cannot be used for calculation", 400)
+
+    ase_obj = ase_unserialize(node["content"])
+    input_data, error = setup.preprocess(ase_obj, engine, node["metadata"]["name"], merged=True)
+    if error:
+        return fmt_msg(error, 503)
+
     output = {
-        "template": setup.get_input(engine),
+        "template": input_data.get("merged", setup.get_input(engine)),
         "schema": setup.get_schema(engine),
     }
     return Response(

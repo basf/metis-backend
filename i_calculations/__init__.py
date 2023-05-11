@@ -50,23 +50,34 @@ class Calc_setup:
         return Calc_setup.schemata.get(engine, Calc_setup.schemata["dummy"])
 
     def preprocess(self, ase_obj, engine, name, **kwargs):
+        # FIXME avoid engine file names here
         error = None
 
         if engine == "topas":
 
-            result = {
-                "calc.inp": self.get_input(engine),
-                "structure.inc": ase_to_topas(ase_obj),
-            }
+            control_input = self.get_input(engine)
+            struct_input = ase_to_topas(ase_obj)
+
+            if kwargs.get("merged"):
+                result = {
+                    "merged": control_input.replace('#include "structure.inc"', struct_input)
+                }
+            else:
+                result = {
+                    "calc.inp": control_input,
+                    "structure.inc": struct_input,
+                }
 
         elif engine == "fullprof":
 
             atoms_input, cell_input = ase_to_fullprof(ase_obj)
             template = self.get_input(engine)
-            template = template.replace("{{template.title}}", name)
+            template = template.replace("{{template.title}}", "Metis")
             template = template.replace("{{template.phase}}", atoms_input)
             template = template.replace("{{template.cell}}", cell_input)
-            result = {"calc.pcr": template}
+            result = {
+                "merged" if kwargs.get("merged") else "calc.pcr": template
+            }
 
         else:
             result = {

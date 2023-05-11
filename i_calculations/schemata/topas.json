@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "TOPAS calculation schema",
+  "description": "TOPAS calculation schema (WIP)",
   "type": "object",
   "additionalProperties": true,
   "properties": {

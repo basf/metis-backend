@@ -1,1 +1,13 @@
-{}
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "FullProf calculation schema (WIP)",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "job": {
+      "description": "Simulation / refinement mode / algorythm type + the type of the radiation",
+      "type": "number",
+      "enum": [-3, -1, 0, 1, 2, 3]
+    }
+  }
+}

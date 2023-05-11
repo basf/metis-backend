@@ -3,7 +3,7 @@ COMM {{template.title}}
    2   5   1   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0
 !
 !Ipr Ppl Ioc Mat Pcr Ls1 Ls2 Ls3 NLI Prf Ins Rpa Sym Hkl Fou Sho Ana
-   0   0   1   0   1   0   4   0   0   2   0   0   0   0   0   0   1
+   0   0   1   0   1   0   0   0   0   2   0   0   0   0   0   0   1
 !
 ! Lambda1  Lambda2    Ratio    Bkpos    Wdt    Cthm     muR   AsyLim   Rpolarz  2nd-muR -> Patt# 1
  1.540596 1.540596  0.50000   65.000 20.0000  0.7998  0.0000   40.00    0.0000  0.0000
