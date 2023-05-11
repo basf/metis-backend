@@ -6,9 +6,9 @@
 
 The basic requirements are **Python**, **Numpy**, and **Postgres**. Note that the Numpy depends on the low-level Fortran numeric system libraries, which might be absent in your system.
 
-Another core requirement is [AiiDA](https://github.com/aiidateam/aiida-core) as well as its plugin [yascheduler](https://github.com/tilde-lab/yascheduler), introducing a separate cloud orchestration. The AiiDA depends on the **RabbitMQ** message broker.
+Another core requirement is [AiiDA](https://github.com/aiidateam/aiida-core) as well as its plugin [yascheduler](https://github.com/tilde-lab/yascheduler), introducing a separate cloud orchestration. The AiiDA requires the **RabbitMQ** message broker.
 
-Thus, `metis-backend` consists of 3 independent parts, each using Postgres:
+Thus, `metis-backend` consists of the 3 independent parts, each using Postgres:
 
 - `metis-backend` Python server
 - `aiida_core` workflow engine
@@ -18,7 +18,7 @@ Optionally, a frontend server is **Nginx** (`conf/nginx.conf` goes to `/etc/ngin
 
 ## Installation
 
-See `conf/install.sh` for installation of Nginx, Postgres, RabbitMQ, and Supervisor, as well as configuring them. Run `conf/install.sh` and then modify global options `conf/env.ini`.
+Refer to `conf/install.sh` for installation of Nginx, Postgres, RabbitMQ, and Supervisor, as well as configuring them. Run `conf/install.sh` and then modify global options `conf/env.ini`. Alternatively, feel free to install each component on your own (or all together in a container, see below).
 
 The AiiDA should be installed and configured separately. First, a possibility for _ssh-ing_ into a localhost should be ensured:
 
@@ -35,13 +35,13 @@ pip install aiida_core
 bash conf/aiida_setup.sh
 ```
 
-Then setup your virtual env, if needed, and install the Python requirements `pip install -r requirements.txt`.
+Then setup your virtual env, if needed, and install the Python requirements as simply as`pip install -r requirements.txt`.
 
 Finally, apply the database schema: `/data/pg/bin/psql -U postgres -d metis -f schema/schema.sql`.
 
 ## Running
 
-Run `supervisorctl status` to see (nearly) all the services in Supervisor.
+Run `supervisorctl status` to see (almost) all the services in Supervisor.
 
 One by one, all the parts are managed as follows:
 
@@ -67,10 +67,9 @@ directory. This should start all dependencies and services.
 
 `metis-bff` shoult be available at `http://localhost:3000/`
 
-For development you can start services with overrides. For example, if you want
-start `metis-backend` in dev mode, run
+For development you can start services with overrides. For example, if you want, start `metis-backend` in dev mode, run
 `docker-compose -f compose.yml -f compose.dev-backend.yml up`.
-If you want start `metis-bff` in dev mode, run
+If you want, start `metis-bff` in dev mode, run
 `docker-compose -f compose.yml -f compose.dev-bff.yml up`.
 You can combine modes:
 `docker-compose -f compose.yml -f compose.dev-backend.yml -f compose.dev-bff.yml up`.
