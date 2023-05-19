@@ -2,21 +2,12 @@
 version: "3.9"
 services:
   db:
-    container_name: metis-db
-    image: docker.io/library/postgres:14
-    environment:
-      POSTGRES_USER: &dbuser metis
-      POSTGRES_PASSWORD: &dbpassword password
-      POSTGRES_DB: &dbname metis
-      POSTGRESQL_POSTGRES_PASSWORD: *dbpassword
+    extends:
+      file: .docker/common.yml
+      service: db
     volumes:
       - ./.docker/db/pgcrypto.sql:/docker-entrypoint-initdb.d/10-pgcrypto.sql
       - db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: pg_isready -U metis
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   adminer:
     container_name: metis-adminer
@@ -26,106 +17,51 @@ services:
       - "10003:8080"
 
   metis-backend:
-    container_name: metis-backend
+    extends:
+      file: .docker/common.yml
+      service: metis-backend
     depends_on:
       db:
         condition: service_healthy
-      # rabbitmq:
-      #   condition: service_healthy
-    build:
-      context: .
-    environment:
-      PGDATABASE: *dbname
-      PGHOST: db
-      PGPASSWORD: *dbpassword
-      PGUSER: *dbuser
-      TZ: Europe/Berlin
-      HOST: "0.0.0.0"
-      API_KEY: &apikey a-very-very-very-long-and-very-very-very-secret-string
-      WEBHOOKS_KEY: &webhookskey another-very-very-long-and-very-very-very-secret-string
-      WEBHOOKS_CALC_UPDATE: http://metis-bff:3000/v0/webhooks/calc_update
-      WEBHOOKS_CALC_CREATE: http://metis-bff:3000/v0/webhooks/calc_create
-      YASCHEDULER_DUMMY_ENGINE_URL: https://github.com/tilde-lab/dummy-engine/releases/download/v0.0.3/dummyengine
-      YASCHEDULER_LOCAL_DATA_DIR: "/data"
-      YASCHEDULER_ADD_NODE_HOST: yanode
-      YASCHEDULER_ADD_NODE_USER: user
     volumes:
+      - .docker/s6-rc.d:/etc/s6-overlay/s6-rc.d
+      - .:/app
       - metis-backend-home:/root
       - metis-data:/data
       - yanode-pubkeys:/yanode-put-pubkey-here
-      # auto add yanode:
-      - .docker/empty:/etc/s6-overlay/s6-rc.d/user/contents.d/yascheduler-add-node
-    ports:
-      - "7050:7050"
-    healthcheck:
-      test: curl http://localhost:7050/calculations/template
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   metis-bff:
-    container_name: metis-bff
+    extends:
+      file: .docker/common.yml
+      service: metis-bff
+    build:
+      args:
+        - NODE_ENV=development
     depends_on:
       db:
         condition: service_healthy
       metis-backend:
         condition: service_healthy
-    build:
-      context: ../metis-bff
-    environment:
-      PG_NAME: *dbname
-      PG_HOST: db
-      PG_USER: *dbuser
-      PG_PASSWORD: *dbpassword
-      API_SCHEMA: http
-      API_HOST: metis-backend
-      API_PORT: "7050"
-      API_KEY: *apikey
-      # TODO: WEBHOOKS_KEY
-    ports:
-      - "3000:3000"
+    volumes:
+      - ../metis-bff:/app
+    entrypoint: "npm run dev"
 
   metis-gui:
-    container_name: metis-gui
+    extends:
+      file: .docker/common.yml
+      service: metis-gui
     depends_on: ["metis-bff"]
     build:
       context: ../metis-gui
-    environment:
-      PORT: "8080"
-      FORCE_HTTPS: "0"
-      PROXY_BFF_API_URL: "http://metis-bff:3000"
-      METIS_RUNTIME_CONFIG: |
-        {
-          'API_HOST': location.origin.concat('/api'),
-          'IDPS': ['local'],
-        }
-    ports:
-      - "10000:8080"
 
   yanode:
-    image: docker.io/linuxserver/openssh-server:latest
-    container_name: yanode
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - PUBLIC_KEY_DIR=/pubkeys
-      - SUDO_ACCESS=true
-      - PASSWORD_ACCESS=false
-      - USER_NAME=user
-      - PORT=22
-    sysctls:
-      - "net.ipv4.ip_unprivileged_port_start=0"
+    extends:
+      file: .docker/common.yml
+      service: yanode
     volumes:
-      - .docker/empty:/etc/s6-overlay/s6-rc.d/init-config/dependencies.d/wait-pubkey:ro
-      - .docker/yanode/s6-rc.d/wait-pubkey:/etc/s6-overlay/s6-rc.d/wait-pubkey:ro
-      - .docker/yanode/s6-rc.d/svc-openssh-server/run:/etc/s6-overlay/s6-rc.d/svc-openssh-server/run:ro
-      - .docker/yanode/custom-cont-init.d:/custom-cont-init.d:ro
       - yanode-host-keys:/config/ssh_host_keys
       - yanode-pubkeys:/pubkeys
       - yanode-data:/config/data
-    ports:
-      - "10022:2222"
-
 
 volumes:
   db-data: {}

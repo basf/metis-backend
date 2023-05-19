@@ -65,14 +65,7 @@ directory. This should start all dependencies and services.
 
 `metis-gui` should be available at `http://localhost:10000/`
 
-`metis-bff` shoult be available at `http://localhost:3000/`
-
-For development you can start services with overrides. For example, if you want, start `metis-backend` in dev mode, run
-`docker-compose -f compose.yml -f compose.dev-backend.yml up`.
-If you want, start `metis-bff` in dev mode, run
-`docker-compose -f compose.yml -f compose.dev-bff.yml up`.
-You can combine modes:
-`docker-compose -f compose.yml -f compose.dev-backend.yml -f compose.dev-bff.yml up`.
+`metis-bff` should be available at `http://localhost:3000/`
 
 ## License
 
