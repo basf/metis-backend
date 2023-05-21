@@ -33,8 +33,6 @@ services:
 
   metis-backend:
     container_name: metis-backend
-    build:
-      context: .
     environment:
       PGDATABASE: *dbname
       PGHOST: db
@@ -75,8 +73,6 @@ services:
         condition: service_healthy
       metis-backend:
         condition: service_healthy
-    build:
-      context: ../metis-bff
     environment:
       PG_NAME: *dbname
       PG_HOST: db

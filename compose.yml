@@ -20,6 +20,8 @@ services:
     extends:
       file: .docker/common.yml
       service: metis-backend
+    build:
+      context: .
     depends_on:
       db:
         condition: service_healthy
@@ -37,6 +39,7 @@ services:
     build:
       args:
         - NODE_ENV=development
+      context: ../metis-bff
     depends_on:
       db:
         condition: service_healthy
