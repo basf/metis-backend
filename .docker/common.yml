@@ -10,7 +10,7 @@ services:
       POSTGRES_DB: &dbname metis
       POSTGRESQL_POSTGRES_PASSWORD: *dbpassword
     volumes:
-      - ./.docker/db/pgcrypto.sql:/docker-entrypoint-initdb.d/10-pgcrypto.sql
+      - db-data:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U metis
       interval: 5s
@@ -56,8 +56,8 @@ services:
       YASCHEDULER_ADD_NODE_HOST: yanode
       YASCHEDULER_ADD_NODE_USER: user
     volumes:
-      # auto add yanode:
-      - .docker/empty:/etc/s6-overlay/s6-rc.d/user/contents.d/yascheduler-add-node
+      - metis-backend-home:/root
+      - metis-data:/data
     ports:
       - "7050:7050"
     healthcheck:
@@ -113,10 +113,5 @@ services:
       - PORT=22
     sysctls:
       - "net.ipv4.ip_unprivileged_port_start=0"
-    volumes:
-      - .docker/empty:/etc/s6-overlay/s6-rc.d/init-config/dependencies.d/wait-pubkey:ro
-      - .docker/yanode/s6-rc.d/wait-pubkey:/etc/s6-overlay/s6-rc.d/wait-pubkey:ro
-      - .docker/yanode/s6-rc.d/svc-openssh-server/run:/etc/s6-overlay/s6-rc.d/svc-openssh-server/run:ro
-      - .docker/yanode/custom-cont-init.d:/custom-cont-init.d:ro
     ports:
       - "10022:2222"
