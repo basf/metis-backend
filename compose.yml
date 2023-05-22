@@ -56,6 +56,11 @@ services:
     depends_on: ["metis-bff"]
     build:
       context: ../metis-gui
+    environment:
+      METIS_RUNTIME_CONFIG_SRC: "/srv/index_html.orig"
+    volumes:
+      - ../metis-gui/dist/index.html:/srv/index_html.orig
+      - ../metis-gui/dist/build:/srv/build
 
   yanode:
     extends:
