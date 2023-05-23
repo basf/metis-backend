@@ -1,8 +1,0 @@
-services:
-  metis-bff:
-    build:
-      args:
-        - NODE_ENV=development
-    volumes:
-      - ../metis-bff:/app
-    entrypoint: "npm run dev"

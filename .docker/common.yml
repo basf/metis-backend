@@ -1,0 +1,117 @@
+---
+version: "3.9"
+services:
+  db:
+    container_name: metis-db
+    image: docker.io/library/postgres:14
+    environment:
+      POSTGRES_USER: &dbuser metis
+      POSTGRES_PASSWORD: &dbpassword password
+      POSTGRES_DB: &dbname metis
+      POSTGRESQL_POSTGRES_PASSWORD: *dbpassword
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U metis
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    container_name: metis-rmq
+    image: docker.io/library/rabbitmq:3.8.14-management
+    environment:
+      RABBITMQ_DEFAULT_USER: &rabbituser guest
+      RABBITMQ_DEFAULT_PASS: &rabbitpass guest
+    volumes:
+      - rmq-data:/var/lib/rabbitmq/
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 5
+
+  metis-backend:
+    container_name: metis-backend
+    environment:
+      PGDATABASE: *dbname
+      PGHOST: db
+      PGPASSWORD: *dbpassword
+      PGUSER: *dbuser
+      RMQHOST: rabbitmq
+      RMQPASSWORD: *rabbitpass
+      RMQUSER: *rabbituser
+      TZ: Europe/Berlin
+      USER_EMAIL: aiida@localhost
+      USER_FIRST_NAME: Giuseppe
+      USER_LAST_NAME: Verdi
+      USER_INSTITUTION: LaScala
+      HOST: "0.0.0.0"
+      API_KEY: &apikey a-very-very-very-long-and-very-very-very-secret-string
+      WEBHOOKS_KEY: &webhookskey another-very-very-long-and-very-very-very-secret-string
+      WEBHOOKS_CALC_UPDATE: http://metis-bff:3000/v0/webhooks/calc_update
+      WEBHOOKS_CALC_CREATE: http://metis-bff:3000/v0/webhooks/calc_create
+      YASCHEDULER_DUMMY_ENGINE_URL: https://github.com/tilde-lab/dummy-engine/releases/download/v0.0.3/dummyengine
+      YASCHEDULER_LOCAL_DATA_DIR: "/data"
+      YASCHEDULER_ADD_NODE_HOST: yanode
+      YASCHEDULER_ADD_NODE_USER: user
+    volumes:
+      - metis-backend-home:/root
+      - metis-data:/data
+    ports:
+      - "7050:7050"
+    healthcheck:
+      test: curl http://localhost:7050/calculations/template
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  metis-bff:
+    container_name: metis-bff
+    depends_on:
+      db:
+        condition: service_healthy
+      metis-backend:
+        condition: service_healthy
+    environment:
+      PG_NAME: *dbname
+      PG_HOST: db
+      PG_USER: *dbuser
+      PG_PASSWORD: *dbpassword
+      API_SCHEMA: http
+      API_HOST: metis-backend
+      API_PORT: "7050"
+      API_KEY: *apikey
+      # TODO: WEBHOOKS_KEY
+    ports:
+      - "3000:3000"
+
+  metis-gui:
+    container_name: metis-gui
+    environment:
+      PORT: "8080"
+      FORCE_HTTPS: "0"
+      PROXY_BFF_API_URL: "http://metis-bff:3000"
+      METIS_RUNTIME_CONFIG: |
+        {
+          'API_HOST': location.origin.concat('/api'),
+          'IDPS': ['local'],
+        }
+    ports:
+      - "10000:8080"
+
+  yanode:
+    image: docker.io/linuxserver/openssh-server:latest
+    container_name: yanode
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - PUBLIC_KEY_DIR=/pubkeys
+      - SUDO_ACCESS=true
+      - PASSWORD_ACCESS=false
+      - USER_NAME=user
+      - PORT=22
+    sysctls:
+      - "net.ipv4.ip_unprivileged_port_start=0"
+    ports:
+      - "10022:2222"

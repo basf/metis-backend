@@ -1,4 +1,6 @@
+.docker/common.yml
 .docker/db
 Dockerfile
 compose.yml
+compose.*.yml
 backups

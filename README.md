@@ -57,22 +57,15 @@ One by one, all the parts are managed as follows:
 This is an experimental feature intended primarily for development and testing.
 
 It is assumed that you have the `metis-backend`, `metis-bff`, and `metis-gui`
-repositories cloned on the same level. Also, you need `docker` and `docker-compose`
-(or `podman` and `podman-compose`) installed.
+repositories cloned on the same level. Also, you need `docker` (or `podman`
+and `podman-compose`) installed.
 
-Now, you can run `docker-compose up` (`podman-compose up`) in `metis-backend`
+Now, you can run `docker compose up` (`podman-compose up`) in `metis-backend`
 directory. This should start all dependencies and services.
 
 `metis-gui` should be available at `http://localhost:10000/`
 
-`metis-bff` shoult be available at `http://localhost:3000/`
-
-For development you can start services with overrides. For example, if you want, start `metis-backend` in dev mode, run
-`docker-compose -f compose.yml -f compose.dev-backend.yml up`.
-If you want, start `metis-bff` in dev mode, run
-`docker-compose -f compose.yml -f compose.dev-bff.yml up`.
-You can combine modes:
-`docker-compose -f compose.yml -f compose.dev-backend.yml -f compose.dev-bff.yml up`.
+`metis-bff` should be available at `http://localhost:3000/`
 
 ## License
 
