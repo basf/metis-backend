@@ -30,7 +30,7 @@ elif fmt == 'optimade':
 else:
     raise RuntimeError('Provided data format unsuitable or not recognized')
 
-ase_obj, error = refine(ase_obj, conventional_cell=True)
+ase_obj, error = refine(ase_obj)
 if error:
     raise RuntimeError(error)
 

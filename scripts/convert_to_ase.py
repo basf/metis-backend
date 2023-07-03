@@ -33,5 +33,5 @@ if error:
     raise RuntimeError(error)
 
 print(ase_obj)
-print(ase_obj.get_positions())
+print(ase_obj.get_scaled_positions())
 print(get_formula(ase_obj))
