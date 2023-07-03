@@ -9,7 +9,6 @@ services:
       - ./.docker/db/pgcrypto.sql:/docker-entrypoint-initdb.d/10-pgcrypto.sql
 
   adminer:
-    container_name: metis-adminer
     depends_on: ["db"]
     image: docker.io/library/adminer:4
     ports:

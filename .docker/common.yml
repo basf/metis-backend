@@ -2,7 +2,6 @@
 version: "3.9"
 services:
   db:
-    container_name: metis-db
     image: docker.io/library/postgres:14
     environment:
       POSTGRES_USER: &dbuser metis
@@ -18,7 +17,6 @@ services:
       retries: 10
 
   rabbitmq:
-    container_name: metis-rmq
     image: docker.io/library/rabbitmq:3.8.14-management
     environment:
       RABBITMQ_DEFAULT_USER: &rabbituser guest
@@ -32,7 +30,6 @@ services:
       retries: 5
 
   metis-backend:
-    container_name: metis-backend
     environment:
       PGDATABASE: *dbname
       PGHOST: db
@@ -67,7 +64,6 @@ services:
       retries: 10
 
   metis-bff:
-    container_name: metis-bff
     depends_on:
       db:
         condition: service_healthy
@@ -87,7 +83,6 @@ services:
       - "3000:3000"
 
   metis-gui:
-    container_name: metis-gui
     environment:
       PORT: "8080"
       FORCE_HTTPS: "0"
@@ -102,7 +97,6 @@ services:
 
   yanode:
     image: docker.io/linuxserver/openssh-server:latest
-    container_name: yanode
     environment:
       - PUID=1000
       - PGID=1000
