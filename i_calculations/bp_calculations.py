@@ -329,7 +329,7 @@ def update():
                 current_app.logger.error(error)
             else:
                 current_app.logger.warning(
-                    "Successfully processed calc %s and linked node %s to node %s"
+                    "Successfully processed calc %s and linked %s to %s"
                     % (task_id, result["parent"], result["uuid"])
                 )
 
