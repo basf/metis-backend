@@ -445,7 +445,7 @@ def process_calc(db, calc_row, scheduler_id):
         return None, error
 
     output["metadata"]["engine"] = calc_row["metadata"]["engine"]
-    output["metadata"]["name"] = calc_row["metadata"]["name"] + " result"
+    output["metadata"]["name"] = calc_row["metadata"]["name"] # + " result"
 
     new_uuid = db.put_item(output["metadata"], output["content"], output["type"])
     result = {"uuid": new_uuid, "parent": calc_row["metadata"]["parent"]}

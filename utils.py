@@ -14,7 +14,7 @@ assert os.path.exists(CONFIG_PATH)
 config = ConfigParser()
 config.read(CONFIG_PATH)
 
-API_KEY =             config.get('api', 'key')
+API_KEY =             config.get('api', 'key') # NB not to confuse with the BFF API key
 WEBHOOK_KEY =         config.get('webhooks', 'key')
 WEBHOOK_CALC_UPDATE = config.get('webhooks', 'calc_update')
 WEBHOOK_CALC_CREATE = config.get('webhooks', 'calc_create')

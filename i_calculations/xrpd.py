@@ -17,16 +17,16 @@ def get_pattern(resource):
         f = open(resource)
     except OSError:
         for line in resource.splitlines():
-            if line.startswith("END"): # FullProf fmt
+            line = line.strip()
+            if not line or line.startswith("END"): # FullProf fmt
                 break
             try:
                 output.append([float(item) for item in line.split(maxsplit=1)])
             except ValueError:
                 continue
-
     else:
         while True:
-            line = f.readline()
+            line = f.readline().strip()
             if not line or line.startswith("END"): # FullProf fmt
                 break
             try:
@@ -36,11 +36,6 @@ def get_pattern(resource):
         f.close()
 
     if output:
-
-        try: ymax = max([y for _, y in output]) # normalize
-        except ValueError: return None
-
-        output = [[x, int(round(y / ymax * 200))] for x, y in output]
         return dict(content=output, type=Data_type.pattern)
 
     return None

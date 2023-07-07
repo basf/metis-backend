@@ -101,6 +101,7 @@ class Calc_setup:
 
         for item in os.listdir(data_folder):
             item_path = os.path.join(data_folder, item)
+
             if not os.path.isfile(item_path):
                 continue
 
