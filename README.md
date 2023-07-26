@@ -2,6 +2,7 @@
 
 **This is the third part of the whole Metis infra: [GUI](https://github.com/basf/metis-gui) &rlarr; [BFF](https://github.com/basf/metis-bff) &rlarr; [backend](https://github.com/basf/metis-backend).**
 
+
 ### Requirements
 
 The basic requirements are **Python**, **Numpy**, and **Postgres**. Note that the Numpy depends on the low-level Fortran numeric system libraries, which might be absent in your system.
@@ -15,6 +16,7 @@ Thus, `metis-backend` consists of the 3 independent parts, each using Postgres:
 - `yascheduler` cloud manager
 
 Optionally, a frontend server is **Nginx** (`conf/nginx.conf` goes to `/etc/nginx`), and all these guys are controlled by the **Supervisor** daemon (`conf/supervisord.conf` goes to `/etc/supervisor`).
+
 
 ## Installation
 
@@ -39,6 +41,7 @@ Then setup your virtual env, if needed, and install the Python requirements as s
 
 Finally, apply the database schema: `/data/pg/bin/psql -U postgres -d metis -f schema/schema.sql`.
 
+
 ## Running
 
 Run `supervisorctl status` to see (almost) all the services in Supervisor.
@@ -51,6 +54,7 @@ One by one, all the parts are managed as follows:
 - AiiDA daemon is started separately with `verdi daemon start`
 - Postgres database(s) can be seen with `/data/pg/bin/psql -U postgres -l`
 - RabbitMQ is controlled with `rabbitmqctl status`
+
 
 ## Run in containers
 
@@ -66,6 +70,25 @@ directory. This should start all dependencies and services.
 `metis-gui` should be available at `http://localhost:10000/`
 
 `metis-bff` should be available at `http://localhost:3000/`
+
+
+## Recognized data formats
+
+
+### Crystalline structures
+
+- CIF
+- POSCAR
+- Optimade JSON
+
+
+### XRPD data
+
+- XY patterns (TSV-alike)
+- Bruker's RAW (*binary*)
+- Bruker's Topas CLI
+- Synchrotron HDF5 (*binary*)
+
 
 ## License
 

@@ -10,9 +10,11 @@ unidecode
 
 pyparsing <= 2.4.7
 cython # NB might be required beforehand
+matplotlib >= 3.7.2
 numpy
 scipy
 ase
 pycodcif
 spglib
-yascheduler >= 1.0.10
+yascheduler >= 1.0.12
+xylib-py
