@@ -4,13 +4,18 @@ only a few Postgres tables are used;
 of course we use SQL here only and nowhere else
 """
 import json
+import logging
 
+import numpy as np
 import pg8000
 
 
-NODE_TABLE = "backend_data_nodes"
-LINK_TABLE = "backend_data_links"
-PHASE_TABLE = "distinct_phases"
+NODE_TABLE =    "backend_data_nodes"
+LINK_TABLE =    "backend_data_links"
+PHASE_TABLE =   "backend_phases"
+REFDIS_TABLE =  "backend_refdis"
+REFELS_TABLE =  "backend_refels"
+REFSTRS_TABLE = "backend_refstrs"
 
 
 class Data_type:
@@ -22,6 +27,7 @@ class Data_type:
 
 
 class Data_storage:
+
     def __init__(self, user, password, database, host, port=5432):
         self.connection = pg8000.connect(
             user=user, password=password, database=database, host=host, port=int(port)
@@ -176,6 +182,38 @@ class Data_storage:
             return True
 
         return False
+
+    def get_refdis(self, els, strict=False):
+
+        from i_phaseid import MAX_PATT_LEN
+
+        pg_arrays, pattern_ids, names = [], [], []
+        els.sort()
+
+        if strict:
+            query = f"SELECT DISTINCT d.ext_id, d.di, s.name FROM {REFDIS_TABLE} d INNER JOIN {REFSTRS_TABLE} s USING (ext_id) INNER JOIN {REFELS_TABLE} f USING(ext_id) WHERE f.elements = '-" + "--".join(els) + "-' LIMIT 1500;"
+
+        else:
+            query = f"SELECT DISTINCT d.ext_id, d.di, s.name FROM {REFDIS_TABLE} d INNER JOIN {REFSTRS_TABLE} s USING (ext_id) INNER JOIN {REFELS_TABLE} f USING(ext_id) WHERE f.elements LIKE '" + "%%-" + "-%%-".join(els) + "-%%" + "' LIMIT 1500;"
+
+        logging.warning(query)
+        self.cursor.execute(query)
+        for row in self.cursor.fetchall():
+            pattern_ids.append(row[0])
+            pg_arrays.append(np.array(row[1], dtype=float))
+            names.append(row[2])
+
+        if not pattern_ids:
+            return [], [], []
+
+        ref_patterns = np.zeros((len(pattern_ids), MAX_PATT_LEN, 2))
+        for n, array in enumerate(pg_arrays):
+            array = array[:MAX_PATT_LEN, :]
+            intensities = array[:, 1]
+            array[:, 1] = intensities / np.max(intensities)
+            ref_patterns[n, 0 : len(array), :] = array
+
+        return ref_patterns, pattern_ids, names
 
     def close(self):
         self.connection.close()

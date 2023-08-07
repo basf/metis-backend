@@ -7,7 +7,7 @@ from i_data import Data_type
 def get_pattern(resource):
     """
     Check if a file / given string contains computed XRPD pattern
-    (basicaly, two columns of floats)
+    (two columns of floats)
     TODO
     process large patterns in-place leaving only their integral feature
     """
@@ -45,8 +45,8 @@ def get_pattern_name():
     """
     TODO generate meaningful name based on the pattern features?
     """
-    symbols = string.ascii_uppercase
-    return "XRPD-" + "".join(random.choice(symbols) for _ in range(6))
+    symbols = string.ascii_lowercase
+    return "XRD-" + "".join(random.choice(symbols) for _ in range(5))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 
 import os.path
+import string
+import random
 import uuid
 from functools import wraps
 from configparser import ConfigParser
@@ -18,6 +20,8 @@ API_KEY =             config.get('api', 'key') # NB not to confuse with the BFF 
 WEBHOOK_KEY =         config.get('webhooks', 'key')
 WEBHOOK_CALC_UPDATE = config.get('webhooks', 'calc_update')
 WEBHOOK_CALC_CREATE = config.get('webhooks', 'calc_create')
+
+MAX_UPLOAD_SIZE = 1024 * 1024
 
 
 def get_data_storage():
@@ -80,3 +84,8 @@ def is_valid_uuid(given):
         return True
     except ValueError:
         return False
+
+
+def get_rnd_string(length=12):
+    symbols = string.digits + string.ascii_letters
+    return "".join(random.choice(symbols) for _ in range(length))

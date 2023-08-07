@@ -3,7 +3,8 @@
 import sys
 
 import set_path
-from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
+from i_data import detect_format
+from i_structures.struct_utils import poscar_to_ase, optimade_to_ase, refine, get_formula
 from i_structures.cif_utils import cif_to_ase
 
 

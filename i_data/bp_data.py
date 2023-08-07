@@ -1,15 +1,19 @@
 # from pprint import pprint
+import base64
 import json
 from unidecode import unidecode
 from io import StringIO
 
-from flask import Blueprint, current_app, request, abort, Response
+from flask import Blueprint, current_app, request, abort, Response, send_file
 from ase import io as ase_io
 
 from i_data import Data_type
+from i_data.fmt import detect_format
+from i_data.xrpd import extract_pattern
+
 from i_structures import html_formula
+from i_structures.cif_utils import cif_to_ase
 from i_structures.struct_utils import (
-    detect_format,
     poscar_to_ase,
     optimade_to_ase,
     refine,
@@ -17,10 +21,9 @@ from i_structures.struct_utils import (
     ase_serialize,
     ase_unserialize,
 )
-from i_structures.cif_utils import cif_to_ase
 from i_calculations.xrpd import get_pattern, get_pattern_name
 
-from utils import get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
+from utils import MAX_UPLOAD_SIZE, get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
 
 
 bp_data = Blueprint("data", __name__, url_prefix="/data")
@@ -42,12 +45,18 @@ def create():
     if not content:
         return fmt_msg("Empty request")
 
-    if not 0 < len(content) < 300000:
+    if 'base64,' in content[:128]:
+        # handling raw bytes in Flask request string is non-trivial,
+        # so we have to encode them in base64 at the client
+        try: content = base64.b64decode(content.split('base64,', maxsplit=1)[1])
+        except: pass
+
+    if not 0 < len(content) < MAX_UPLOAD_SIZE:
         return fmt_msg("Request size is invalid")
 
-    if not is_plain_text(content):
-        # return fmt_msg('Request contains unsupported (non-latin) characters')
-        content = unidecode(content)
+    #if not is_plain_text(content):
+    #    return fmt_msg('Request contains unsupported (non-latin) characters')
+    #    content = unidecode(content)
 
     fmt = request.values.get("fmt") or detect_format(content)
     ase_obj, raw_obj, error = None, None, None
@@ -63,7 +72,11 @@ def create():
 
     elif fmt == "xy":
         raw_obj = get_pattern(content)
+        if not raw_obj:
+            error = "Not a valid pattern provided"
 
+    elif fmt == "raw":
+        raw_obj = extract_pattern(content)
         if not raw_obj:
             error = "Not a valid pattern provided"
 
@@ -239,15 +252,23 @@ def examine():
 
     output = {}
 
-    if item["type"] in (Data_type.property, Data_type.pattern):
+    if item["type"] == Data_type.pattern:
+        try: content = json.loads(item["content"])
+        except Exception: return fmt_msg("Sorry erroneous data cannot be shown")
+
+        try: ymax = max([y for _, y in content]) # normalize
+        except ValueError: return fmt_msg("Sorry erroneous data cannot be shown")
+
+        # for GUI Plot
+        output["content"] = [[x, int(round(y / ymax * 100))] for x, y in content]
+
+    elif item["type"] == Data_type.property:
         output["engine"] = item["metadata"].get(
             "engine", "default engine"
         )  # FIXME "default engine"
 
-        try:
-            output["content"] = json.loads(item["content"])
-        except Exception:
-            return fmt_msg("Sorry these data are erroneous and cannot be shown")
+        try: output["content"] = json.loads(item["content"])
+        except Exception: return fmt_msg("Sorry erroneous data cannot be shown")
 
     elif item["type"] == Data_type.structure:
         ase_obj = ase_unserialize(item["content"])
