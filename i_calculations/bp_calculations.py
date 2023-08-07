@@ -1,9 +1,15 @@
-import random
+import logging
 import json
+
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+import numpy as np
 
 from flask import Blueprint, current_app, request, abort, Response
 import requests
 from yascheduler import Yascheduler
+from ase.data import chemical_symbols
 
 from utils import (
     get_data_storage,
@@ -11,6 +17,7 @@ from utils import (
     key_auth,
     webhook_auth,
     is_valid_uuid,
+    get_rnd_string,
     WEBHOOK_KEY,
     WEBHOOK_CALC_UPDATE,
     WEBHOOK_CALC_CREATE,
@@ -19,6 +26,22 @@ from i_calculations import Calc_setup, _scheduler_status_mapping
 from i_data import Data_type
 from i_structures import html_formula
 from i_structures.struct_utils import ase_unserialize
+
+from i_phaseid import (
+    WAVELENGTH,
+    MIN_Q,
+    MAX_Q,
+    N_BINS,
+    N_BEST_MATCHES,
+    create_reference_array,
+    get_q_twotheta_wv,
+    integrate_patt_q,
+    get_q_dspace,
+    cleanup_convert_dis,
+)
+from i_phaseid.el_groups import groups_canonical
+from i_phaseid.background import background
+from i_phaseid.histogram import get_best_match
 
 
 bp_calculations = Blueprint("calculations", __name__, url_prefix="/calculations")
@@ -239,8 +262,44 @@ def status():
         )
 
     return Response(
-        json.dumps(results, indent=4), content_type="application/json", status=200
+        json.dumps(results, indent=4),
+        content_type="application/json",
+        status=200
     )
+
+
+def process_calc(db, calc_row, scheduler_id):
+    import os.path
+
+    ready_task = yac.queue_get_task(scheduler_id) or {}
+    local_folder = ready_task.get("metadata", {}).get("local_folder")
+
+    if local_folder and os.path.exists(local_folder):
+        output, error = setup.postprocess(calc_row["metadata"]["engine"], local_folder)
+    else:
+        output, error = None, "No calculation results exist"
+
+    if error:
+        return None, error
+
+    output["metadata"]["engine"] = calc_row["metadata"]["engine"]
+    output["metadata"]["name"] = calc_row["metadata"]["name"] # + " result"
+
+    new_uuid = db.put_item(output["metadata"], output["content"], output["type"])
+    result = {"uuid": new_uuid, "parent": calc_row["metadata"]["parent"]}
+
+    try:
+        db.put_link(calc_row["metadata"]["parent"], new_uuid)
+    except Exception:
+        return (
+            None,
+            "Graph edge consistency error (no source %s ?)"
+            % calc_row["metadata"]["parent"],
+        )
+
+    db.drop_item(calc_row["uuid"])
+
+    return result, None
 
 
 @bp_calculations.route("/update", methods=["POST"])
@@ -370,7 +429,11 @@ def delete():
     @apiParam {String} uuid Datasource
     """
     # raise NotImplementedError
-    return Response("{}", content_type="application/json", status=200)
+    return Response(
+        "{}",
+        content_type="application/json",
+        status=200
+    )
 
 
 @bp_calculations.route("/template", methods=["POST"])
@@ -411,7 +474,9 @@ def template():
         "schema": setup.get_schema(engine),
     }
     return Response(
-        json.dumps(output, indent=4), content_type="application/json", status=200
+        json.dumps(output, indent=4),
+        content_type="application/json",
+        status=200
     )
 
 
@@ -421,7 +486,7 @@ def supported():
     @api {get} /calculations/supported supported
     @apiGroup Calculations
     @apiDescription Get list of the supported scheduler engines, e.g.
-    ["dummy", "dummy+workflow", "pcrystal", "pcrystal+workflow", "gulp", "topas"]
+        ["dummy", "dummy+workflow", "pcrystal", "pcrystal+workflow", "gulp", "topas"]
     """
     return Response(
         json.dumps(list(yac.config.engines.keys())),
@@ -430,35 +495,130 @@ def supported():
     )
 
 
-def process_calc(db, calc_row, scheduler_id):
-    import os
+chemical_symbols_groups = chemical_symbols + list(groups_canonical.values())
 
-    ready_task = yac.queue_get_task(scheduler_id) or {}
-    local_folder = ready_task.get("metadata", {}).get("local_folder")
+@bp_calculations.route("/phaseid", methods=["POST"])
+@key_auth
+def phaseid():
+    """
+    @api {post} /calculations/phaseid phaseid
+    @apiGroup Calculations
+    @apiDescription Run phase ID
+    """
+    uuid = request.values.get("uuid")
+    if not uuid or not is_valid_uuid(uuid):
+        return fmt_msg("Empty or invalid request")
 
-    if local_folder and os.path.exists(local_folder):
-        output, error = setup.postprocess(calc_row["metadata"]["engine"], local_folder)
-    else:
-        output, error = None, "No calculation results exist"
+    els = request.values.get("els")
+    if not els:
+        return fmt_msg("Empty element or group provided")
 
-    if error:
-        return None, error
+    els = list(set(els.split('-')))
 
-    output["metadata"]["engine"] = calc_row["metadata"]["engine"]
-    output["metadata"]["name"] = calc_row["metadata"]["name"] # + " result"
+    for n in range(len(els)):
+        els[n] = groups_canonical.get(els[n], els[n])
+        if els[n] not in chemical_symbols_groups:
+            return fmt_msg("Unknown element or group provided")
 
-    new_uuid = db.put_item(output["metadata"], output["content"], output["type"])
-    result = {"uuid": new_uuid, "parent": calc_row["metadata"]["parent"]}
+    try: strict = bool(int(request.values.get('strict', 0)))
+    except:
+        return fmt_msg("Unknown strict flag provided")
 
-    try:
-        db.put_link(calc_row["metadata"]["parent"], new_uuid)
-    except Exception:
-        return (
-            None,
-            "Graph edge consistency error (no source %s ?)"
-            % calc_row["metadata"]["parent"],
+    db = get_data_storage()
+    node = db.get_item(uuid)
+    if not node or node["type"] != Data_type.pattern:
+        db.close()
+        return fmt_msg("Unsuitable content requested")
+
+    try: pattern = np.array(json.loads(node["content"]))
+    except Exception: return fmt_msg("Sorry erroneous data cannot be shown")
+
+    patterns_db, patterns_ids, names = db.get_refdis(els, strict)
+    db.close()
+    logging.warning(f"Using {len(patterns_db)} reference patterns")
+
+    if not len(patterns_db):
+        return fmt_msg("Cannot match this pattern", 200)
+
+    # BOF phase ID algo
+    _, ref_patterns_db = create_reference_array(patterns_db, MIN_Q, MAX_Q, N_BINS)
+
+    intensities = pattern[:, 1]
+    twoteta = pattern[:, 0]
+
+    intensities_bg = background(
+        intensities,
+        twoteta,
+        iterations=20,
+        sec_iterations=20,
+        curvature=0.0001,
+        perc_anchor_pnts=20,
+    )
+    intens_minus_bg = intensities - intensities_bg
+    qhisto_diffpatt = integrate_patt_q(
+        get_q_twotheta_wv(twoteta, WAVELENGTH), # convert two theta to Q-space
+        intens_minus_bg,
+        MIN_Q,
+        MAX_Q,
+        N_BINS,
+        normalize=True,
+    )
+
+    best_match_idx, _, __ = get_best_match(
+        ref_patterns_db, qhisto_diffpatt, N_BEST_MATCHES
+    )
+    logging.warning('Results: %s' % [(patterns_ids[item], names[item]) for item in best_match_idx])
+    # EOF phase ID algo
+
+    results = []
+    tmp_fnames = []
+    max_intens = np.max(intensities)
+
+    for n in range(min(N_BEST_MATCHES, len(best_match_idx))):
+        plt.figure(n + 1)
+
+        best_patt = patterns_db[best_match_idx[n], :, :]
+        best_patt_conv = cleanup_convert_dis(best_patt)
+
+        plt.bar(
+            qhisto_diffpatt[0],
+            qhisto_diffpatt[1] * max_intens,
+            width=(MAX_Q - MIN_Q) / N_BINS,
+            color="red",
         )
+        plt.xlim([0, MAX_Q])
+        plt.plot(
+            get_q_twotheta_wv(twoteta, WAVELENGTH),
+            intensities_bg,
+            color="black",
+        )
+        plt.plot(
+            get_q_twotheta_wv(twoteta, WAVELENGTH),
+            intens_minus_bg,
+            color="black",
+        )
+        plt.stem(
+            get_q_dspace(best_patt_conv[0]),
+            (best_patt_conv[1] * max_intens),
+            linefmt="blue",
+        )
+        #plt.title(names[best_match_idx[n]])
 
-    db.drop_item(calc_row["uuid"])
+        imgname = get_rnd_string()
+        imgpath = f'/tmp/{imgname}.webp'
+        imgaddr = f'http://localhost:7051/?id={imgname}'  # development
+        #imgaddr = f'https://app.metis.science/pi/{imgname}.webp'  # production
 
-    return result, None
+        plt.savefig(imgpath, format="webp", transparent=True, pil_kwargs={"quality": 35})
+
+        results.append(dict(
+            src=imgaddr,
+            entry=patterns_ids[best_match_idx[n]],
+            name=names[best_match_idx[n]],
+        ))
+
+    return Response(
+        json.dumps(results, indent=4),
+        content_type="application/json",
+        status=200
+    )
