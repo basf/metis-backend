@@ -21,7 +21,7 @@ def get_pattern(resource):
             if not line or line.startswith("END"): # FullProf fmt
                 break
             try:
-                output.append([float(item) for item in line.split(maxsplit=1)])
+                output.append([float(item) for item in line.split()[:2]]) # NB many-column cases
             except ValueError:
                 continue
     else:
@@ -30,7 +30,7 @@ def get_pattern(resource):
             if not line or line.startswith("END"): # FullProf fmt
                 break
             try:
-                output.append([float(item) for item in line.split(maxsplit=1)])
+                output.append([float(item) for item in line.split()[:2]]) # NB many-column cases
             except ValueError:
                 continue
         f.close()

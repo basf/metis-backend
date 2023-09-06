@@ -215,5 +215,32 @@ class Data_storage:
 
         return ref_patterns, pattern_ids, names
 
+    def import_item(self, ext_id):
+
+        # FIXME only allow from a certain phase ID session
+        # FIXME specify parent node
+
+        from i_structures.struct_utils import provider_to_ase, ase_serialize
+
+        self.cursor.execute(f"SELECT provider, name, content FROM {REFSTRS_TABLE} WHERE ext_id = '{ext_id}';")
+        row = self.cursor.fetchone()
+        if not row:
+            logging.error("No such structure: %s" % ext_id)
+            return False, False
+
+        elif row[0] == 4:
+
+            ase_obj, error = provider_to_ase(row[2]) # FIXME switch to optimade_to_ase
+            if error:
+                logging.error("Error converting to ASE: %s" % error)
+                return False, False
+
+            uuid = self.put_item(dict(name=row[1]), ase_serialize(ase_obj), Data_type.structure)
+            return uuid, row[1]
+
+        else:
+            logging.error("Unsupported provider found: %s" % row[0])
+            return False, False
+
     def close(self):
         self.connection.close()

@@ -1,6 +1,10 @@
+import re
 import itertools
 
-groups_canonical = {
+from ase.data import chemical_symbols
+
+
+groups_abbreviations = {
     "actinide": "Ad",
     "alkali": "Ak",
     "alkaline": "An",
@@ -29,6 +33,9 @@ groups_canonical = {
     "tetrels": "Tt",
     "triels": "Tr",
 }
+
+chemical_symbols_and_groups = chemical_symbols[1:] + list(groups_abbreviations.values())
+
 
 el_groups = {
     "Ac": ["Ad"],
@@ -187,6 +194,20 @@ def els_to_groups(els):
     return list(
         x for x, _ in itertools.groupby(result)
     )  # remove dups from list of lists
+
+
+def get_elements_or_groups(string):
+
+    els = []
+
+    for el in re.split(r"\s|\-|\,", string):
+
+        if el not in chemical_symbols_and_groups:
+            return None
+
+        els.append(el)
+
+    return sorted(els)
 
 
 if __name__ == "__main__":

@@ -63,7 +63,7 @@ def detect_format(string):
 
         # Bruker's RAW measurements
         flag = string[:4]
-        if flag == b"RAW1" or flag == b"RAW2" or flag == b"RAW4":
+        if flag == b"RAW1" or flag == b"RAW2" or flag == b"RAW3" or flag == b"RAW4":
             return "raw"
 
         # Synchrotron HDF5 measurements

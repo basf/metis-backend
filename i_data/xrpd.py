@@ -1,4 +1,6 @@
 
+#import logging
+
 #import numpy as np
 import xylib
 
@@ -13,6 +15,9 @@ def extract_pattern(binary):
 
     nrow = block.get_point_count()
     ncol = block.get_column_count()
+
+    #logging.warning(nrow)
+    #logging.warning(ncol)
 
     output = []
     counter = 0

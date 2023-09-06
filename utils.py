@@ -20,6 +20,8 @@ API_KEY =             config.get('api', 'key') # NB not to confuse with the BFF 
 WEBHOOK_KEY =         config.get('webhooks', 'key')
 WEBHOOK_CALC_UPDATE = config.get('webhooks', 'calc_update')
 WEBHOOK_CALC_CREATE = config.get('webhooks', 'calc_create')
+TMP_PHASEID_DIR = config.get('local', 'tmp_phaseid_dir')
+TMP_PHASEID_URL = config.get('local', 'tmp_phaseid_url')
 
 MAX_UPLOAD_SIZE = 1024 * 1024
 

@@ -1,5 +1,6 @@
 import logging
 import json
+import os.path
 
 import matplotlib
 matplotlib.use('agg')
@@ -9,7 +10,6 @@ import numpy as np
 from flask import Blueprint, current_app, request, abort, Response
 import requests
 from yascheduler import Yascheduler
-from ase.data import chemical_symbols
 
 from utils import (
     get_data_storage,
@@ -21,27 +21,25 @@ from utils import (
     WEBHOOK_KEY,
     WEBHOOK_CALC_UPDATE,
     WEBHOOK_CALC_CREATE,
+    TMP_PHASEID_DIR,
+    TMP_PHASEID_URL,
 )
 from i_calculations import Calc_setup, _scheduler_status_mapping
 from i_data import Data_type
 from i_structures import html_formula
 from i_structures.struct_utils import ase_unserialize
-
 from i_phaseid import (
-    WAVELENGTH,
-    MIN_Q,
-    MAX_Q,
-    N_BINS,
-    N_BEST_MATCHES,
+    WAVELENGTH, MIN_Q, MAX_Q, N_BINS, N_BEST_MATCHES,
+    background,
+    get_best_match,
     create_reference_array,
     get_q_twotheta_wv,
     integrate_patt_q,
     get_q_dspace,
     cleanup_convert_dis,
+    groups_abbreviations,
+    chemical_symbols_and_groups,
 )
-from i_phaseid.el_groups import groups_canonical
-from i_phaseid.background import background
-from i_phaseid.histogram import get_best_match
 
 
 bp_calculations = Blueprint("calculations", __name__, url_prefix="/calculations")
@@ -269,8 +267,6 @@ def status():
 
 
 def process_calc(db, calc_row, scheduler_id):
-    import os.path
-
     ready_task = yac.queue_get_task(scheduler_id) or {}
     local_folder = ready_task.get("metadata", {}).get("local_folder")
 
@@ -495,8 +491,6 @@ def supported():
     )
 
 
-chemical_symbols_groups = chemical_symbols + list(groups_canonical.values())
-
 @bp_calculations.route("/phaseid", methods=["POST"])
 @key_auth
 def phaseid():
@@ -516,8 +510,8 @@ def phaseid():
     els = list(set(els.split('-')))
 
     for n in range(len(els)):
-        els[n] = groups_canonical.get(els[n], els[n])
-        if els[n] not in chemical_symbols_groups:
+        els[n] = groups_abbreviations.get(els[n], els[n])
+        if els[n] not in chemical_symbols_and_groups:
             return fmt_msg("Unknown element or group provided")
 
     try: strict = bool(int(request.values.get('strict', 0)))
@@ -538,7 +532,7 @@ def phaseid():
     logging.warning(f"Using {len(patterns_db)} reference patterns")
 
     if not len(patterns_db):
-        return fmt_msg("Cannot match this pattern", 200)
+        return fmt_msg("Cannot match this pattern against the elements given", 200)
 
     # BOF phase ID algo
     _, ref_patterns_db = create_reference_array(patterns_db, MIN_Q, MAX_Q, N_BINS)
@@ -604,15 +598,17 @@ def phaseid():
         )
         #plt.title(names[best_match_idx[n]])
 
-        imgname = get_rnd_string()
-        imgpath = f'/tmp/{imgname}.webp'
-        imgaddr = f'http://localhost:7051/?id={imgname}'  # development
-        #imgaddr = f'https://app.metis.science/pi/{imgname}.webp'  # production
+        img_name = get_rnd_string()
 
-        plt.savefig(imgpath, format="webp", transparent=True, pil_kwargs={"quality": 35})
+        plt.savefig(
+            os.path.join(TMP_PHASEID_DIR, f'{img_name}.webp'),
+            format="webp",
+            transparent=True,
+            pil_kwargs={"quality": 35}
+        )
 
         results.append(dict(
-            src=imgaddr,
+            src=TMP_PHASEID_URL + f'{img_name}.webp',
             entry=patterns_ids[best_match_idx[n]],
             name=names[best_match_idx[n]],
         ))

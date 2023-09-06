@@ -1,4 +1,9 @@
+
 import numpy as np
+
+from i_phaseid.el_groups import groups_abbreviations, chemical_symbols_and_groups, get_elements_or_groups
+from i_phaseid.background import background
+from i_phaseid.histogram import get_best_match
 
 
 WAVELENGTH = 0.1610184395  # experimental, switch between wavelengths based on 2theta
@@ -13,7 +18,7 @@ N_BEST_MATCHES = 5
 MAX_PATT_LEN = 1200
 
 
-def get_non_zero_indices(data):  # FIXME
+def get_non_zero_indices(data):
     res = []
 
     for i, datum in enumerate(data):
@@ -21,6 +26,7 @@ def get_non_zero_indices(data):  # FIXME
             res.append(i)
 
     return res
+    #return np.nonzero(data)[0]
 
 
 def cleanup_convert_dis(dis):
