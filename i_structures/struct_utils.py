@@ -9,38 +9,10 @@ from functools import reduce
 from io import StringIO
 
 from ase.atoms import Atom, Atoms
-from ase.io.vasp import read_vasp
+from ase.io import read as ase_read, write as ase_write
 from ase.spacegroup import crystal
 
 import spglib
-
-
-def detect_format(string):
-    """
-    Detect CIF, POSCAR, or Optimade
-    checking the most common features
-    """
-    if "_cell_angle_gamma" in string and "loop_" in string:
-        return "cif"
-
-    lines = string.splitlines()
-
-    for nline in [6, 7, 8]:
-        if len(lines) <= nline:
-            break
-        if lines[nline].strip().lower().startswith("direct") or lines[
-            nline
-        ].strip().lower().startswith("cart"):
-            return "poscar"
-
-    if (
-        '"immutable_id"' in string
-        and '"cartesian_site_positions"' in string
-        and '"lattice_vectors"' in string
-    ):
-        return "optimade"
-
-    return None
 
 
 def poscar_to_ase(poscar_string):
@@ -54,7 +26,7 @@ def poscar_to_ase(poscar_string):
     ase_obj, error = None, None
     buff = StringIO(poscar_string)
     try:
-        ase_obj = read_vasp(buff)
+        ase_obj = ase_read(buff, format='vasp')
     except AttributeError:
         error = "Types of atoms can be neither found nor inferred"
     except Exception:
@@ -163,7 +135,7 @@ def optimade_to_ase(structure, skip_disorder=False):
                 if "concentration" not in specie:
                     return None, "Atomic disorder data incomplete"
 
-                return None, "Structural disorder is not supported"
+                return None, "Structural disorder is not yet supported"
 
     if len(structure["attributes"].get("species", [])) != len(
         structure["attributes"]["cartesian_site_positions"]
@@ -192,7 +164,42 @@ def optimade_to_ase(structure, skip_disorder=False):
     )
 
 
-def refine(ase_obj, accuracy=1e-03, conventional_cell=False):
+def provider_to_ase(json_obj):
+
+    # FIXME switch to optimade_to_ase
+
+    assert json_obj["occs_noneq"]
+    assert json_obj["basis_noneq"]
+    assert json_obj["els_noneq"]
+    assert json_obj["sg_n"]
+    assert json_obj["cell_abc"]
+
+    if any([occ != 1 for occ in json_obj["occs_noneq"]]):
+        return None, "Structural disorder is not yet supported"
+
+    atom_data = []
+
+    for n, xyz in enumerate(json_obj["basis_noneq"]):
+        atom_data.append(Atom(json_obj["els_noneq"][n], tuple(xyz), tag=n))
+
+    if not atom_data:
+        return None, "No atoms found"
+
+    try:
+        return crystal(
+            atom_data,
+            spacegroup=json_obj["sg_n"],
+            cellpar=json_obj["cell_abc"],
+            primitive_cell=True,
+            onduplicates='error',
+            info={}
+        ), None
+
+    except Exception as ex:
+        return None, "ASE cannot handle structure: %s" % ex
+
+
+def refine(ase_obj, accuracy=1e-03, **kwargs): # FIXME switch to primitive cell
     """
     Refine ASE structure using spglib
 
@@ -205,7 +212,7 @@ def refine(ase_obj, accuracy=1e-03, conventional_cell=False):
         None *or* error (str)
     """
     spg_result = spglib.standardize_cell(
-        ase_obj, symprec=accuracy, to_primitive=not conventional_cell
+        ase_obj, symprec=accuracy, to_primitive=True
     )
     if not spg_result or len(spg_result) != 3:
         return None, f"Error in structure refinement, spglib returned {spg_result}"
@@ -224,7 +231,7 @@ def refine(ase_obj, accuracy=1e-03, conventional_cell=False):
                     numbers=numbers, cell=lattice, scaled_positions=positions, pbc=True
                 ),
                 spacegroup=spacegroup,
-                primitive_cell=not conventional_cell,
+                primitive_cell=True,
                 onduplicates="replace",
             ),
             None,
@@ -378,6 +385,24 @@ def sgn_to_crsystem(number):
         return "triclinic"
 
 
+def crsystem_to_sgn(crsystem):
+
+    mapping = {
+        "cubic":        (195, 230), # 1.
+        "hexagonal":    (168, 194), # 2.
+        "trigonal":     (143, 167), # 3.
+        "tetragonal":   (75, 142),  # 4.
+        "orthorhombic": (16, 74),   # 5.
+        "monoclinic":   (3, 15),    # 6.
+        "triclinic":    (1, 2)      # 7.
+    }
+
+    if crsystem not in mapping:
+        raise KeyError("Unexpected crystalline lattice: %s" % crsystem)
+
+    return mapping[crsystem]
+
+
 MAX_ATOMS = 1000
 SITE_SUM_OCCS_TOL = 0.99
 
@@ -454,10 +479,15 @@ def extract_chemical_element(str):
 
 def ase_serialize(ase_obj):
     return base64.b64encode(pickle.dumps(ase_obj, protocol=4)).decode("ascii")
+    #buff = StringIO()
+    #ase_write(buff, ase_obj, format='json')
+    #return buff.getvalue()
 
 
 def ase_unserialize(string):
     return pickle.loads(base64.b64decode(string))
+    #buff = StringIO(string)
+    #return ase_read(buff, format='json')
 
 
 if __name__ == "__main__":

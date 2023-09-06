@@ -143,6 +143,41 @@ def create():
         abort(400)
 
 
+@bp_data.route("/import", methods=["POST"])
+@key_auth
+def importing():
+    """
+    @api {post} /data/import import
+    @apiGroup Datasources
+    @apiDescription Import datasource from an external provider DB
+
+    @apiParam {String} ext_id External ID
+    """
+    ext_id = request.values.get("ext_id")
+    if not ext_id:
+        abort(400)
+
+    db = get_data_storage()
+    new_uuid, name = db.import_item(ext_id)
+    db.close()
+
+    if not new_uuid:
+        abort(404)
+
+    return Response(
+        json.dumps(
+            dict(
+                uuid=new_uuid,
+                type=Data_type.structure,
+                name=name, # NB already in HTML
+            ),
+            indent=4,
+        ),
+        content_type="application/json",
+        status=200,
+    )
+
+
 @bp_data.route("/listing", methods=["POST"])
 @key_auth
 def listing():
