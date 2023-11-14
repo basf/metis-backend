@@ -1,6 +1,10 @@
 # Metis scientific backend
 
+<p align="center"><img src="https://github.com/basf/metis-backend/blob/master/metis-logo.png" width="300" /></p>
+
 **This is the third part of the whole Metis infra: [GUI](https://github.com/basf/metis-gui) &rlarr; [BFF](https://github.com/basf/metis-bff) &rlarr; [backend](https://github.com/basf/metis-backend).**
+
+This is the Flask-based CRUD-server for scientific data and simulations, utilizing Flask blueprints.
 
 
 ### Requirements
@@ -44,7 +48,7 @@ Finally, apply the database schema: `/data/pg/bin/psql -U postgres -d metis -f s
 
 ## Running
 
-Run `supervisorctl status` to see (almost) all the services in Supervisor.
+Run `supervisorctl status` to see all the services in Supervisor.
 
 One by one, all the parts are managed as follows:
 
@@ -54,6 +58,13 @@ One by one, all the parts are managed as follows:
 - AiiDA daemon is started separately with `verdi daemon start`
 - Postgres database(s) can be seen with `/data/pg/bin/psql -U postgres -l`
 - RabbitMQ is controlled with `rabbitmqctl status`
+- (Nginx can be added to Supervisor as well depending on your taste)
+
+### Regular tasks
+
+A script `scripts/assign_phases.py` should be run regularly to organize users' uploaded data, e.g. in cron job scheduler
+
+`*/5 * * * * /path/to/metis-backend/scripts/assign_phases.py`
 
 
 ## Run in containers

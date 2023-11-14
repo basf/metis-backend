@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PG_VERSION="14.6" # NB subject to update
+PG_VERSION="14.10" # NB subject to update
 PG_SOURCE_ADDR=https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.gz
 
 SETTINGS=(
@@ -17,7 +17,7 @@ done
 
 apt-get -y update && apt-get -y upgrade
 update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-apt-get -y install build-essential nginx rabbitmq-server libatlas-base-dev libopenblas-dev libblas-dev libffi-dev libreadline6-dev zlib1g-dev liblapack-dev supervisor python3-dev python3-pip python3-numpy python3-scipy python3-matplotlib p7zip-full git swig python3-setuptools pkg-config
+apt-get -y install build-essential nginx rabbitmq-server libatlas-base-dev libopenblas-dev libblas-dev libffi-dev libreadline6-dev zlib1g-dev liblapack-dev supervisor python3-dev python3-pip python3-numpy python3-scipy python3-matplotlib p7zip-full git swig python3-setuptools pkg-config libboost-all-dev
 
 update-rc.d supervisor defaults
 update-rc.d supervisor enable
@@ -26,9 +26,8 @@ echo "set mouse-=a" > ~/.vimrc
 
 # Postgres compilation and installation
 
-useradd postgres
-mkdir -p /data/pg
-mkdir /data/pg/db
+id -u postgres > /dev/null 2>&1 || useradd postgres
+mkdir -p /data/pg/db
 chown -R postgres:postgres /data/pg
 
 wget $PG_SOURCE_ADDR

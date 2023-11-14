@@ -17,4 +17,4 @@ ase
 pycodcif
 spglib
 yascheduler >= 1.0.12
-xylib-py
+xylib-py # NB apt-get install libboost-all-dev
