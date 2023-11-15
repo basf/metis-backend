@@ -574,13 +574,13 @@ def phaseid():
         best_patt = patterns_db[best_match_idx[n], :, :]
         best_patt_conv = cleanup_convert_dis(best_patt)
 
+        plt.xlim([0, MAX_Q])
         plt.bar(
             qhisto_diffpatt[0],
             qhisto_diffpatt[1] * max_intens,
             width=(MAX_Q - MIN_Q) / N_BINS,
             color="red",
         )
-        plt.xlim([0, MAX_Q])
         plt.plot(
             get_q_twotheta_wv(twoteta, WAVELENGTH),
             intensities_bg,
@@ -595,6 +595,7 @@ def phaseid():
             get_q_dspace(best_patt_conv[0]),
             (best_patt_conv[1] * max_intens),
             linefmt="blue",
+            basefmt="blue",
         )
         #plt.title(names[best_match_idx[n]])
 

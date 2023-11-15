@@ -20,7 +20,7 @@ BFF_TABLES = {
     'collections_datasources': BFF_PREFIX + 'user_collections_datasources',
 }
 
-COLLECTION_VISIBILITY = {
+VISIBILITY = {
     'private': 'private',
     'shared': 'shared',
     'community': 'community',
@@ -41,7 +41,7 @@ def formula_to_chars(string):
     return fidx.sub("&#x208\g<0>;", string)
 
 
-def create_tag(conn, cursor, user_id, type_id, title, descr, visibility=COLLECTION_VISIBILITY['community']):
+def create_tag(conn, cursor, user_id, type_id, title, descr, visibility=VISIBILITY['community']):
     cursor.execute("""
     INSERT INTO {tags_table} ("userId", "typeId", title, description, visibility) VALUES
     ({user_id}, {type_id}, '{title}', '{descr}', '{visibility}')

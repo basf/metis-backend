@@ -9,24 +9,24 @@ This is the Flask-based CRUD-server for scientific data and simulations, utilizi
 
 ### Requirements
 
-The basic requirements are **Python**, **Numpy**, and **Postgres**. Note that the Numpy depends on the low-level Fortran numeric system libraries, which might be absent in your system.
+The basic requirements are **Python**, **Numpy**, and **PostgreSQL**. Note that the Numpy depends on the low-level Fortran numeric system libraries, which might be absent in your system.
 
-Another core requirement is [AiiDA](https://github.com/aiidateam/aiida-core) as well as its plugin [yascheduler](https://github.com/tilde-lab/yascheduler), introducing a separate cloud orchestration. The AiiDA requires the **RabbitMQ** message broker.
+A scientific cloud scheduler [yascheduler](https://github.com/tilde-lab/yascheduler) is required for a separate cloud orchestration. An optional requirement is [AiiDA](https://github.com/aiidateam/aiida-core), which can be linked to the cloud scheduler. The AiiDA is a Python framework for the complex scientific workflows, requiring PostgreSQL database and **RabbitMQ** message broker.
 
-Thus, `metis-backend` consists of the 3 independent parts, each using Postgres:
+Thus, `metis-backend` consists of the 3 independent parts, each using PostgreSQL:
 
-- `metis-backend` Python server
+- `metis-backend` Python server per se
 - `aiida_core` workflow engine
-- `yascheduler` cloud manager
+- `yascheduler` cloud scheduler
 
 Optionally, a frontend server is **Nginx** (`conf/nginx.conf` goes to `/etc/nginx`), and all these guys are controlled by the **Supervisor** daemon (`conf/supervisord.conf` goes to `/etc/supervisor`).
 
 
 ## Installation
 
-Refer to `conf/install.sh` for installation of Nginx, Postgres, RabbitMQ, and Supervisor, as well as configuring them. Run `conf/install.sh` and then modify global options `conf/env.ini`. Alternatively, feel free to install each component on your own (or all together in a container, see below).
+Refer to `conf/install.sh` for installation of Nginx, PostgreSQL, RabbitMQ, and Supervisor, as well as configuring them. Run `conf/install.sh` and then modify global options `conf/env.ini`. Alternatively, feel free to install each component on your own (or all together in a container, see below).
 
-The AiiDA should be installed and configured separately. First, a possibility for _ssh-ing_ into a localhost should be ensured:
+The AiiDA can be installed and configured separately. First, a possibility for _ssh-ing_ into a localhost should be ensured:
 
 ```shell
 ssh-keygen -t rsa
@@ -56,7 +56,7 @@ One by one, all the parts are managed as follows:
 - `yascheduler` is started simply with `yascheduler` command
 - AiiDA is managed with `verdi`, e.g. `verdi process list` or `verdi node show`
 - AiiDA daemon is started separately with `verdi daemon start`
-- Postgres database(s) can be seen with `/data/pg/bin/psql -U postgres -l`
+- PostgreSQL database(s) can be seen with `/data/pg/bin/psql -U postgres -l`
 - RabbitMQ is controlled with `rabbitmqctl status`
 - (Nginx can be added to Supervisor as well depending on your taste)
 
