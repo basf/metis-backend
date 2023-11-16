@@ -7,7 +7,7 @@ import logging
 from helpers import gen_data_item
 
 import set_path
-from metis_backend import get_data_storage
+from metis_backend.helpers import get_data_storage
 from metis_backend.datasources import Data_type
 
 

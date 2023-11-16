@@ -14,7 +14,7 @@ import base64
 from common import make_request
 
 import set_path
-from metis_backend import API_KEY
+from metis_backend.helpers import API_KEY
 from metis_backend.datasources.fmt import detect_format
 
 

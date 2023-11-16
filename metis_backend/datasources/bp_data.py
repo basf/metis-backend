@@ -7,7 +7,7 @@ from io import StringIO
 from flask import Blueprint, current_app, request, abort, Response, send_file
 from ase import io as ase_io
 
-from metis_backend import MAX_UPLOAD_SIZE, get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
+from metis_backend.helpers import MAX_UPLOAD_SIZE, get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
 
 from metis_backend.datasources import Data_type
 from metis_backend.datasources.fmt import detect_format
