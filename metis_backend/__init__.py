@@ -8,10 +8,10 @@ from configparser import ConfigParser
 
 from flask import Response, current_app, request
 
-from i_data import Data_storage
+from metis_backend.datasources import Data_storage
 
 
-CONFIG_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'conf/env.ini'))
+CONFIG_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '../conf/env.ini'))
 assert os.path.exists(CONFIG_PATH)
 config = ConfigParser()
 config.read(CONFIG_PATH)

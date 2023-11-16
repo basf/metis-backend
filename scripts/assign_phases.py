@@ -10,10 +10,10 @@ import spglib
 from phase_utils import assign_phase, save_as_phase
 
 import set_path
-from i_data import Data_type, NODE_TABLE, PHASE_TABLE
-from i_structures import html_formula
-from i_structures.struct_utils import get_formula, sgn_to_crsystem, crsystem_to_sgn, ase_unserialize
-from utils import get_data_storage
+from metis_backend import get_data_storage
+from metis_backend.datasources import Data_type, NODE_TABLE, PHASE_TABLE
+from metis_backend.structures import html_formula
+from metis_backend.structures.struct_utils import get_formula, sgn_to_crsystem, crsystem_to_sgn, ase_unserialize
 
 
 accuracy = 1E-02

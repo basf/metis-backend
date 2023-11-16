@@ -1,7 +1,7 @@
 import random
 import string
 
-from i_data import Data_type
+from metis_backend.datasources import Data_type
 
 
 def get_pattern(resource):

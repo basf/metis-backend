@@ -1,7 +1,7 @@
 """
 A simple persistence layer implementation;
-only a few Postgres tables are used;
-of course we use SQL here only and nowhere else
+a few Postgres tables are used
+(of course we must use raw SQL here only and nowhere else)
 """
 import json
 import logging
@@ -185,7 +185,7 @@ class Data_storage:
 
     def get_refdis(self, els, strict=False):
 
-        from i_phaseid import MAX_PATT_LEN
+        from metis_backend.phaseid import MAX_PATT_LEN
 
         pg_arrays, pattern_ids, names = [], [], []
         els.sort()
@@ -220,7 +220,7 @@ class Data_storage:
         # FIXME only allow from a certain phase ID session
         # FIXME specify parent node
 
-        from i_structures.struct_utils import provider_to_ase, ase_serialize
+        from metis_backend.structures.struct_utils import provider_to_ase, ase_serialize
 
         self.cursor.execute(f"SELECT provider, name, content FROM {REFSTRS_TABLE} WHERE ext_id = '{ext_id}';")
         row = self.cursor.fetchone()

@@ -7,13 +7,15 @@ from io import StringIO
 from flask import Blueprint, current_app, request, abort, Response, send_file
 from ase import io as ase_io
 
-from i_data import Data_type
-from i_data.fmt import detect_format
-from i_data.xrpd import extract_pattern
+from metis_backend import MAX_UPLOAD_SIZE, get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
 
-from i_structures import html_formula
-from i_structures.cif_utils import cif_to_ase
-from i_structures.struct_utils import (
+from metis_backend.datasources import Data_type
+from metis_backend.datasources.fmt import detect_format
+from metis_backend.datasources.xrpd import extract_pattern
+
+from metis_backend.structures import html_formula
+from metis_backend.structures.cif_utils import cif_to_ase
+from metis_backend.structures.struct_utils import (
     poscar_to_ase,
     optimade_to_ase,
     refine,
@@ -21,9 +23,7 @@ from i_structures.struct_utils import (
     ase_serialize,
     ase_unserialize,
 )
-from i_calculations.xrpd import get_pattern, get_pattern_name
-
-from utils import MAX_UPLOAD_SIZE, get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
+from metis_backend.calculations.xrpd import get_pattern, get_pattern_name
 
 
 bp_data = Blueprint("data", __name__, url_prefix="/data")

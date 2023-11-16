@@ -6,8 +6,8 @@ import logging
 from flask import Flask
 from netius.servers import WSGIServer
 
-from i_data.bp_data import bp_data
-from i_calculations.bp_calculations import bp_calculations
+from metis_backend.datasources.bp_data import bp_data
+from metis_backend.calculations.bp_calculations import bp_calculations
 
 
 app = Flask(__name__)

@@ -11,7 +11,7 @@ from flask import Blueprint, current_app, request, abort, Response
 import requests
 from yascheduler import Yascheduler
 
-from utils import (
+from metis_backend import (
     get_data_storage,
     fmt_msg,
     key_auth,
@@ -24,11 +24,11 @@ from utils import (
     TMP_PHASEID_DIR,
     TMP_PHASEID_URL,
 )
-from i_calculations import Calc_setup, _scheduler_status_mapping
-from i_data import Data_type
-from i_structures import html_formula
-from i_structures.struct_utils import ase_unserialize
-from i_phaseid import (
+from metis_backend.calculations import Calc_setup, _scheduler_status_mapping
+from metis_backend.datasources import Data_type
+from metis_backend.structures import html_formula
+from metis_backend.structures.struct_utils import ase_unserialize
+from metis_backend.phaseid import (
     WAVELENGTH, MIN_Q, MAX_Q, N_BINS, N_BEST_MATCHES,
     background,
     get_best_match,

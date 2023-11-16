@@ -4,8 +4,8 @@
 #import numpy as np
 import xylib
 
-from i_phaseid import MAX_PATT_LEN
-from i_data import Data_type
+from metis_backend.phaseid import MAX_PATT_LEN
+from metis_backend.datasources import Data_type
 
 
 def extract_pattern(binary):

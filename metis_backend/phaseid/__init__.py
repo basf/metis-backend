@@ -1,9 +1,9 @@
 
 import numpy as np
 
-from i_phaseid.el_groups import groups_abbreviations, chemical_symbols_and_groups, get_elements_or_groups
-from i_phaseid.background import background
-from i_phaseid.histogram import get_best_match
+from metis_backend.phaseid.el_groups import groups_abbreviations, chemical_symbols_and_groups, get_elements_or_groups
+from metis_backend.phaseid.background import background
+from metis_backend.phaseid.histogram import get_best_match
 
 
 WAVELENGTH = 0.1610184395  # experimental, switch between wavelengths based on 2theta

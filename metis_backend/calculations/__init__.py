@@ -4,10 +4,10 @@ import json
 
 from yascheduler import Yascheduler
 
-from i_calculations.xrpd import get_pattern
-from i_data import Data_type
-from i_structures.topas import ase_to_topas
-from i_structures.fullprof import ase_to_fullprof
+from metis_backend.calculations.xrpd import get_pattern
+from metis_backend.datasources import Data_type
+from metis_backend.structures.topas import ase_to_topas
+from metis_backend.structures.fullprof import ase_to_fullprof
 
 
 _scheduler_status_mapping = {

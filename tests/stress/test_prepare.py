@@ -7,8 +7,8 @@ import logging
 from helpers import gen_data_item
 
 import set_path
-from i_data import Data_type
-from utils import get_data_storage
+from metis_backend import get_data_storage
+from metis_backend.datasources import Data_type
 
 
 FAKE_NODES = 5000

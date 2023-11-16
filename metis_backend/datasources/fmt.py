@@ -1,16 +1,16 @@
 
-#from utils import is_plain_text
-
-
 def is_ascii(test):
-    try: test.decode("utf-8")
-    except: return False
-    else: return True
+    try:
+        test.decode("utf-8")
+    except:
+        return False
+    else:
+        return True
 
 
 def detect_format(string):
     """
-    Detect data format checking the most common features
+    Detect data format, checking the most common features
     """
     try: string = string.encode("utf-8")
     except: pass # keep strings as bytes FIXME

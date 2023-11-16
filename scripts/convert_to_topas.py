@@ -3,10 +3,11 @@
 import sys
 
 import set_path
-from i_structures.struct_utils import detect_format, poscar_to_ase, optimade_to_ase, refine, get_formula
-from i_structures.cif_utils import cif_to_ase
-from i_structures.topas import ase_to_topas
-from i_calculations import Calc_setup
+from metis_backend.datasources.fmt import detect_format
+from metis_backend.structures.struct_utils import poscar_to_ase, optimade_to_ase, refine, get_formula
+from metis_backend.structures.cif_utils import cif_to_ase
+from metis_backend.structures.topas import ase_to_topas
+from metis_backend.calculations import Calc_setup
 
 
 structure = open(sys.argv[1]).read()

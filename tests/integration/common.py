@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 import httplib2
 
 import set_path
-from utils import API_KEY
+from metis_backend import API_KEY
 
 
 # see BFF server

@@ -1,6 +1,6 @@
 # Metis scientific backend
 
-<p align="center"><img src="https://github.com/basf/metis-backend/blob/master/metis-logo.png" width="300" /></p>
+<p align="center"><img src="https://github.com/basf/metis-backend/blob/master/logo.png" width="300" /></p>
 
 **This is the third part of the whole Metis infra: [GUI](https://github.com/basf/metis-gui) &rlarr; [BFF](https://github.com/basf/metis-bff) &rlarr; [backend](https://github.com/basf/metis-backend).**
 

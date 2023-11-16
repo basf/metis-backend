@@ -4,7 +4,7 @@ import logging
 import random # TODO
 
 import set_path
-from i_structures.chemical_formulae import parse_formula
+from metis_backend.structures.chemical_formulae import parse_formula
 
 
 BFF_PREFIX = 'bff_'
@@ -66,7 +66,7 @@ def get_or_create_tag(conn, cursor, user_id, type_id, title, descr):
 
 def save_as_phase(db, node_uuid, phase):
 
-    logging.warning(f"Assing phase {phase} to node {node_uuid}")
+    logging.warning(f"Assigning phase {phase} to node {node_uuid}")
 
     db.cursor.execute("""SELECT id FROM {} WHERE uuid = '{}';""".format(
         BFF_TABLES['datasources'], node_uuid
