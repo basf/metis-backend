@@ -10,7 +10,7 @@ unidecode
 
 pyparsing <= 2.4.7
 cython # NB might be required beforehand
-matplotlib >= 3.7.2
+matplotlib >= 3.8.1
 numpy
 scipy
 ase
