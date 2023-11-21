@@ -194,10 +194,10 @@ class Data_storage:
         els.sort()
 
         if strict:
-            query = f"SELECT DISTINCT d.ext_id, d.di, s.name FROM {REFDIS_TABLE} d INNER JOIN {REFSTRS_TABLE} s USING (ext_id) INNER JOIN {REFELS_TABLE} f USING(ext_id) WHERE f.elements = '-" + "--".join(els) + "-' LIMIT 1500;"
+            query = f"SELECT DISTINCT d.ext_id, d.di, s.name FROM {REFDIS_TABLE} d INNER JOIN {REFSTRS_TABLE} s USING (ext_id) INNER JOIN {REFELS_TABLE} f USING(ext_id) WHERE f.elements = '-" + "--".join(els) + "-' LIMIT 1000;"
 
         else:
-            query = f"SELECT DISTINCT d.ext_id, d.di, s.name FROM {REFDIS_TABLE} d INNER JOIN {REFSTRS_TABLE} s USING (ext_id) INNER JOIN {REFELS_TABLE} f USING(ext_id) WHERE f.elements LIKE '" + "%%-" + "-%%-".join(els) + "-%%" + "' LIMIT 1500;"
+            query = f"SELECT DISTINCT d.ext_id, d.di, s.name FROM {REFDIS_TABLE} d INNER JOIN {REFSTRS_TABLE} s USING (ext_id) INNER JOIN {REFELS_TABLE} f USING(ext_id) WHERE f.elements LIKE '" + "%%-" + "-%%-".join(els) + "-%%" + "' LIMIT 1000;"
 
         logging.warning(query)
         self.cursor.execute(query)
