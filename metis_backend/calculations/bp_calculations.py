@@ -70,19 +70,27 @@ def create():
     current_app.logger.warning(
         f'Requested {"workflow" if workflow else "calculation"} of {uuid} with {engine}'
     )
+    if workflow: abort(501)
 
     db = get_data_storage()
     node = db.get_item(uuid)
     if not node:
         return fmt_msg("No such content", 400)
 
-    if node["type"] != Data_type.structure:  # FIXME
-        return fmt_msg("The item of this type cannot be used for calculation", 400)
+    if node["type"] == Data_type.structure:
 
-    ase_obj = ase_unserialize(node["content"])
-    input_data, error = setup.preprocess(ase_obj, engine, node["metadata"]["name"])
-    if error:
-        return fmt_msg(error, 503)
+        ase_obj = ase_unserialize(node["content"])
+        input_data, error = setup.preprocess(ase_obj, engine, node["metadata"]["name"])
+        if error:
+            return fmt_msg(error, 503)
+
+    elif node["type"] == Data_type.user_input:
+
+        input_data, error = setup.preprocess(node["content"], engine, node["metadata"]["name"], db=db)
+        if error:
+            return fmt_msg(error, 503)
+
+    else: return fmt_msg("The item of this type cannot be used for calculation", 400)
 
     # inject user-defined input to override calculation
     user_input_files = request.values.get("input")
@@ -105,31 +113,26 @@ def create():
         #
         #    input_data[key] = value
 
-    # validate
     for chk in yac.config.engines[engine].input_files:
         if chk not in input_data:
             return fmt_msg("Invalid input files", 400)
 
-    if workflow:
-        abort(501)
+    # TODO define in config
+    input_data["webhook_url"] = (
+        "http://" + request.host + "/calculations/update?Key=" + WEBHOOK_KEY
+    )
+    # input_data['webhook_custom_params'] = {'blabla': 'blabla'}
+    # input_data['webhook_onsubmit'] = True
 
-    else:
-        # TODO define in config
-        input_data["webhook_url"] = (
-            "http://" + request.host + "/calculations/update?Key=" + WEBHOOK_KEY
-        )
-        # input_data['webhook_custom_params'] = {'blabla': 'blabla'}
-        # input_data['webhook_onsubmit'] = True
-
-        task_id = yac.queue_submit_task(node["metadata"]["name"], input_data, engine)
-        new_uuid = db.put_item(
-            dict(
-                name=node["metadata"]["name"], engine=engine, parent=uuid
-            ),  # FIXME migrate parent
-            task_id,
-            Data_type.calculation,
-        )
-        current_app.logger.warning(f"Submitted {engine} calculation {task_id}")
+    task_id = yac.queue_submit_task(node["metadata"]["name"], input_data, engine)
+    new_uuid = db.put_item(
+        dict(
+            name=node["metadata"]["name"], engine=engine, parent=uuid
+        ),  # FIXME migrate parent
+        task_id,
+        Data_type.calculation,
+    )
+    current_app.logger.warning(f"Submitted {engine} calculation {task_id}")
 
     db.close()
     return Response(
@@ -176,8 +179,7 @@ def status():
         item = db.get_item(uuid)
         calcs = [item] if item else []
 
-    if not calcs:
-        return fmt_msg("No such content", 204)
+    if not calcs: return fmt_msg("No such content", 204)
 
     results_mapping = {}
     yac_items = []
@@ -204,8 +206,7 @@ def status():
             )
             # TODO remove ready workflow
 
-        else:
-            return fmt_msg("Wrong item requested", 400)
+        else: return fmt_msg("Wrong item requested", 400)
 
     yac_tasks = []
     if yac_items:
@@ -271,8 +272,7 @@ def process_calc(db, calc_row, scheduler_id):
     else:
         output, error = None, "No calculation results exist"
 
-    if error:
-        return None, error
+    if error: return None, error
 
     output["metadata"]["engine"] = calc_row["metadata"]["engine"]
     output["metadata"]["name"] = calc_row["metadata"]["name"] # + " result"
@@ -315,9 +315,8 @@ def update():
 
     current_app.logger.warning(f"Got webhook of task {task_id} with status {status}")
 
-    if (
-        status == Yascheduler.STATUS_TO_DO
-    ):  # only AiiDA workflows, since regular calculations do NOT fire this
+    if status == Yascheduler.STATUS_TO_DO:
+        # only AiiDA workflows, since regular calculations do NOT fire this
         try:
             custom_params = json.loads(request.values.get("custom_params", "{}"))
         except Exception:
@@ -329,8 +328,8 @@ def update():
             current_app.logger.error("Got unexpected workflow sequence data")
             abort(403)
 
-    else:
-        search_by_content = task_id
+    else: search_by_content = task_id
+
     current_app.logger.warning(f"Processing calc by ref {search_by_content}")
 
     db = get_data_storage()
@@ -391,7 +390,7 @@ def update():
             try:
                 requests.post(
                     WEBHOOK_CALC_UPDATE,
-                    json={"uuid": item["uuid"], "progress": progress, "result": result},
+                    json={"uuid": item["uuid"], "progress": progress, "result": result, "error": error},
                     timeout=0.5,
                 )
             except Exception:
@@ -400,11 +399,9 @@ def update():
                         "Internal error, calc %s not delivered" % task_id
                     )
 
-        else:
-            abort(403)
+        else: abort(403)
 
-    else:
-        current_app.logger.error("No calc for task %s" % task_id)
+    else: current_app.logger.error("No calc for task %s" % task_id)
 
     db.close()
     return Response("", status=204)
@@ -453,13 +450,20 @@ def template():
     if not node:
         return fmt_msg("No such content", 400)
 
-    if node["type"] != Data_type.structure:
-        return fmt_msg("The item of this type cannot be used for calculation", 400)
+    if node["type"] == Data_type.structure:
 
-    ase_obj = ase_unserialize(node["content"])
-    input_data, error = setup.preprocess(ase_obj, engine, node["metadata"]["name"], merged=True)
-    if error:
-        return fmt_msg(error, 503)
+        ase_obj = ase_unserialize(node["content"])
+        input_data, error = setup.preprocess(ase_obj, engine, node["metadata"]["name"], merged=True)
+        if error:
+            return fmt_msg(error, 503)
+
+    elif node["type"] == Data_type.user_input:
+
+        input_data, error = setup.preprocess(node["content"], "topas", node["metadata"]["name"], merged=True)
+        if error:
+            return fmt_msg(error, 503)
+
+    else: return fmt_msg("The item of this type cannot be used for calculation", 400)
 
     output = {
         "template": input_data.get("merged", setup.get_input(engine)),
@@ -511,8 +515,7 @@ def phaseid():
             return fmt_msg("Unknown element or group provided")
 
     try: strict = bool(int(request.values.get('strict', 0)))
-    except:
-        return fmt_msg("Unknown strict flag provided")
+    except: return fmt_msg("Unknown strict flag provided")
 
     db = get_data_storage()
     node = db.get_item(uuid)

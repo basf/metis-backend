@@ -4,9 +4,10 @@ import json
 
 from yascheduler import Yascheduler
 
-from metis_backend.calculations.xrpd import get_pattern
+from metis_backend.calculations.xrpd import get_pattern, export_pattern, get_topas_output, get_topas_error
 from metis_backend.datasources import Data_type
-from metis_backend.structures.topas import ase_to_topas
+from metis_backend.datasources.fmt import is_ase_obj
+from metis_backend.structures.topas import ase_to_topas, get_topas_keyword
 from metis_backend.structures.fullprof import ase_to_fullprof
 
 
@@ -49,55 +50,89 @@ class Calc_setup:
     def get_schema(self, engine):
         return Calc_setup.schemata.get(engine, Calc_setup.schemata["dummy"])
 
-    def preprocess(self, ase_obj, engine, name, **kwargs):
+    def preprocess(self, calc_obj, engine, name, **kwargs):
         # FIXME avoid engine file names here
         error = None
 
         if engine == "topas":
 
-            control_input = self.get_input(engine)
-            struct_input = ase_to_topas(ase_obj)
+            ext_input = ""
+
+            if is_ase_obj(calc_obj):
+                control_input = self.get_input(engine)
+                struct_input = ase_to_topas(calc_obj)
+
+            else:
+                control_input = calc_obj
+                struct_input = ""
+
+            for keyword in ('xdd "', "macro filename "):
+                if keyword in control_input:
+                    fname = get_topas_keyword(control_input, keyword)
+
+                    if kwargs.get("db") and not kwargs.get("merged"):
+                        item = kwargs["db"].search_item(os.path.basename(fname), name=True)
+                        if not item or item["type"] != Data_type.pattern:
+                            return None, "Included file %s not found" % fname
+
+                        try: ext_input = export_pattern(json.loads(item["content"]))
+                        except Exception: return None, "Sorry cannot show erroneous format"
+
+                    control_input = control_input.replace(fname, "input.xy") # NB see yascheduler.conf
+                    break
+
+            for keyword in ('out "', "macro outname "):
+                if keyword in control_input:
+                    fname = get_topas_keyword(control_input, keyword)
+                    control_input = control_input.replace(fname, "calc.txt") # NB see yascheduler.conf
+                    break
 
             if kwargs.get("merged"):
-                result = {
+                compiled = {
                     "merged": control_input.replace('#include "structure.inc"', struct_input)
                 }
+
             else:
-                result = {
+                compiled = {
                     "calc.inp": control_input,
                     "structure.inc": struct_input,
+                    "input.xy": ext_input,
                 }
 
         elif engine == "fullprof":
 
-            atoms_input, cell_input = ase_to_fullprof(ase_obj)
+            if not is_ase_obj(calc_obj):
+                return None, "FullProf inputs not supported"
+
+            atoms_input, cell_input = ase_to_fullprof(calc_obj)
             template = self.get_input(engine)
             template = template.replace("{{template.title}}", "Metis")
             template = template.replace("{{template.phase}}", atoms_input)
             template = template.replace("{{template.cell}}", cell_input)
-            result = {
+            compiled = {
                 "merged" if kwargs.get("merged") else "calc.pcr": template
             }
 
         else:
-            result = {
+            compiled = {
                 "1.input": self.get_input("dummy"),
                 "2.input": self.get_input("dummy") * 2,
                 "3.input": self.get_input("dummy") * 3,
             }
 
-        return result, error
+        return compiled, error
 
     def postprocess(self, engine, data_folder):
         output = dict(metadata={}, content=None, type=Data_type.property)
 
         parsers = {
-            "topas": get_pattern,
-            "fullprof": get_pattern,
+            "topas": (get_pattern, get_topas_output, get_topas_error),
+            "fullprof": (get_pattern, ),
         }
-        default_parser = lambda x: {"content": 42}
-        parser = parsers.get(engine, default_parser)
-        main_file_asset = None
+        default_parsers = (lambda x: {"content": 42}, ) # FIXME?
+
+        used_parsers = parsers.get(engine, default_parsers)
+        main_output_found = None
 
         for item in os.listdir(data_folder):
             item_path = os.path.join(data_folder, item)
@@ -105,36 +140,22 @@ class Calc_setup:
             if not os.path.isfile(item_path):
                 continue
 
-            result = parser(item_path)
-            if not result:
-                continue
+            for parser in used_parsers:
+                result = parser(item_path)
+                if not result:
+                    continue
 
-            main_file_asset = item_path
-            break
+                main_output_found = item_path
+                break
+
+            if main_output_found:
+                break
 
         else:
-            return (
-                None,
-                f"Cannot find any results expected for {engine} in {data_folder}",
-            )
+            return None, f"Cannot find any results expected for {engine} in {data_folder}"
 
-        output["metadata"]["path"] = main_file_asset
+        output["metadata"]["path"] = main_output_found
         output["content"] = result["content"]
-        if result.get("type"):
-            output["type"] = result["type"]
+        if result.get("type"): output["type"] = result["type"]
 
         return output, None
-
-
-if __name__ == "__main__":
-    from ase.spacegroup import crystal
-
-    # test_obj = crystal(
-    #    ('Sr', 'Ti', 'O', 'O'),
-    #    basis=[(0, 0.5, 0.25), (0, 0, 0), (0, 0, 0.25), (0.255, 0.755, 0)],
-    #    spacegroup=140, cellpar=[5.511, 5.511, 7.796, 90, 90, 90], primitive_cell=True
-    # )
-
-    setup = Calc_setup()
-    # print(setup.get_input('hi'))
-    # print(setup.preprocess(test_obj, 'topas', 'Metis test'))

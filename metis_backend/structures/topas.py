@@ -184,3 +184,9 @@ def convert_to_float(frac_str):
             whole = 0
         frac = float(num) / float(denom)
         return whole - frac if whole < 0 else whole + frac
+
+
+def get_topas_keyword(stack, needle):
+    return stack.split(
+        needle, maxsplit=1)[-1].split("\n", maxsplit=1)[0].split("'", maxsplit=1)[0].replace(
+        "append", "").strip(' \r{}"')

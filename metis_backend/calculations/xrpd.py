@@ -14,23 +14,25 @@ def get_pattern(resource):
     output = []
 
     try:
-        f = open(resource)
+        f = open(resource, "r")
     except OSError:
         for line in resource.splitlines():
             line = line.strip()
             if not line or line.startswith("END"): # FullProf fmt
                 break
             try:
-                output.append([float(item) for item in line.split()[:2]]) # NB many-column cases
+                output.append([float(item) for item in line.split()[:3]])
             except ValueError:
                 continue
     else:
         while True:
-            line = f.readline().strip()
+            try: line = f.readline().strip()
+            except UnicodeDecodeError: return None
+
             if not line or line.startswith("END"): # FullProf fmt
                 break
             try:
-                output.append([float(item) for item in line.split()[:2]]) # NB many-column cases
+                output.append([float(item) for item in line.split()[:3]])
             except ValueError:
                 continue
         f.close()
@@ -41,12 +43,62 @@ def get_pattern(resource):
     return None
 
 
-def get_pattern_name():
+def export_pattern(node_content):
+
+    output = ""
+
+    for deck in node_content:
+        for value in deck:
+            output += "%10.5f " % value
+        output = output[:-1] + "\n"
+
+    return output
+
+
+def get_topas_output(path):
     """
-    TODO generate meaningful name based on the pattern features?
+    Caveat: separator symbol ":" is user-defined in Topas
+    TODO?
     """
-    symbols = string.ascii_lowercase
-    return "XRD-" + "".join(random.choice(symbols) for _ in range(5))
+    output = {}
+
+    with open(path, "r") as f:
+        try: data = f.read(2048)
+        except UnicodeDecodeError: return None
+
+    for line in data.splitlines():
+
+        if len(line) > 256: return None # this is definitely not what we expect
+
+        line = line.strip()
+        if not line or ":" not in line:
+            continue
+
+        key, value = line.split(":", maxsplit=1)
+        value = value.strip()
+        try: value = float(value)
+        except ValueError: pass
+        output[key.strip()] = value
+
+    if output:
+        return dict(content=output, type=Data_type.property)
+
+    return None
+
+
+def get_topas_error(path):
+
+    with open(path, "rb") as f:
+        topas_log = f.read(1024)
+
+    # Fix problematic Windows encoding
+    charmap = set([10, 13] + list(range(32, 128)))
+    topas_log = ''.join(chr(byte) for byte in topas_log if byte in charmap)
+
+    if "Abnormal program termination" in topas_log:
+        return dict(content=dict(error=topas_log.splitlines()))
+
+    return None
 
 
 if __name__ == "__main__":

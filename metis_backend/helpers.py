@@ -91,3 +91,21 @@ def is_valid_uuid(given):
 def get_rnd_string(length=12):
     symbols = string.digits + string.ascii_letters
     return "".join(random.choice(symbols) for _ in range(length))
+
+
+def get_name(default, prefix):
+
+    if default:
+
+        maxnamelen = 24
+        if len(default) > maxnamelen:
+            default = default[:maxnamelen]
+
+        if "." in default[-5:]:
+            default = ".".join(default.split(".")[:-1])
+        if default.endswith('-') or default.endswith('+') or default.endswith(','):
+            default = default[:-1]
+
+        return default
+
+    return prefix + "-" + get_rnd_string(5)

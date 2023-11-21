@@ -1,73 +1,67 @@
 
-def is_ascii(test):
-    try:
-        test.decode("utf-8")
-    except:
-        return False
-    else:
-        return True
-
-
 def detect_format(string):
     """
     Detect data format, checking the most common features
     """
     try: string = string.encode("utf-8")
-    except: pass # keep strings as bytes FIXME
+    except: pass # keep strings as bytes
 
-    if is_ascii(string):
+    ascii_data = string.decode("ascii", errors="ignore")
 
-        string = string.decode("ascii", errors="ignore")
+    # CIF crystalline data
+    if "_cell_angle_gamma" in ascii_data and "loop_" in ascii_data:
+        return "cif"
 
-        # CIF crystalline data
-        if "_cell_angle_gamma" in string and "loop_" in string:
-            return "cif"
+    # Topas CLI simulations
+    elif "ymin_on_ymax " in ascii_data:
+        return "topas"
 
-        # Topas CLI simulations
-        elif "ymin_on_ymax " in string:
-            return "topas"
+    # Optimade JSON crystalline data
+    elif (
+        '"immutable_id"' in ascii_data
+        and '"cartesian_site_positions"' in ascii_data
+        and '"lattice_vectors"' in ascii_data
+    ):
+        return "optimade"
 
-        # Optimade JSON crystalline data
-        elif (
-            '"immutable_id"' in string
-            and '"cartesian_site_positions"' in string
-            and '"lattice_vectors"' in string
-        ):
-            return "optimade"
+    # POSCAR crystalline data
+    lines = ascii_data.splitlines()
+    for nline in [6, 7, 8]:
+        if len(lines) <= nline:
+            break
+        if lines[nline].strip().lower().startswith("direct") or lines[
+            nline
+        ].strip().lower().startswith("cart"):
+            return "poscar"
 
-        # POSCAR crystalline data
-        lines = string.splitlines()
-        for nline in [6, 7, 8]:
-            if len(lines) <= nline:
-                break
-            if lines[nline].strip().lower().startswith("direct") or lines[
-                nline
-            ].strip().lower().startswith("cart"):
-                return "poscar"
-
-        # XY patterns (TSV-alike)
-        counter = 0
-        for line in lines[:-1]:
-            if line.startswith("'"):
-                continue
-            try:
-                [float(item) for item in line.split(maxsplit=1)]
-                counter += 1
-            except ValueError:
-                break
-        else:
-            if counter:
-                return "xy"
-
+    # XY patterns (TSV-alike)
+    counter = 0
+    for line in lines[:-1]:
+        if line.startswith("'"):
+            continue
+        try:
+            [float(item) for item in line.split(maxsplit=2)]
+            counter += 1
+        except ValueError:
+            break
     else:
+        if counter:
+            return "xy"
 
-        # Bruker's RAW measurements
-        flag = string[:4]
-        if flag == b"RAW1" or flag == b"RAW2" or flag == b"RAW3" or flag == b"RAW4":
-            return "raw"
+    # Bruker's RAW measurements
+    flag = string[:4]
+    if flag == b"RAW1" or flag == b"RAW2" or flag == b"RAW3" or flag == b"RAW4":
+        return "raw"
 
-        # Synchrotron HDF5 measurements
-        # TODO
+    # Synchrotron HDF5 measurements
+    # TODO
 
     return None
 
+
+def is_ase_obj(test):
+    try:
+        getattr(test, "pbc")
+    except AttributeError:
+        return False
+    return True

@@ -7,12 +7,18 @@ from io import StringIO
 from flask import Blueprint, current_app, request, abort, Response, send_file
 from ase import io as ase_io
 
-from metis_backend.helpers import MAX_UPLOAD_SIZE, get_data_storage, fmt_msg, key_auth, is_plain_text, is_valid_uuid
-
+from metis_backend.helpers import (
+    MAX_UPLOAD_SIZE,
+    get_data_storage,
+    fmt_msg,
+    key_auth,
+    is_plain_text,
+    is_valid_uuid,
+    get_name,
+)
 from metis_backend.datasources import Data_type
 from metis_backend.datasources.fmt import detect_format
 from metis_backend.datasources.xrpd import extract_pattern
-
 from metis_backend.structures import html_formula
 from metis_backend.structures.cif_utils import cif_to_ase
 from metis_backend.structures.struct_utils import (
@@ -23,7 +29,7 @@ from metis_backend.structures.struct_utils import (
     ase_serialize,
     ase_unserialize,
 )
-from metis_backend.calculations.xrpd import get_pattern, get_pattern_name
+from metis_backend.calculations.xrpd import get_pattern
 
 
 bp_data = Blueprint("data", __name__, url_prefix="/data")
@@ -59,7 +65,8 @@ def create():
     #    content = unidecode(content)
 
     fmt = request.values.get("fmt") or detect_format(content)
-    ase_obj, raw_obj, error = None, None, None
+    ase_obj, xrd_obj, input_obj = None, None, None
+    error = None
 
     if fmt == "cif":
         ase_obj, error = cif_to_ase(content)
@@ -71,20 +78,22 @@ def create():
         ase_obj, error = optimade_to_ase(content)
 
     elif fmt == "xy":
-        raw_obj = get_pattern(content)
-        if not raw_obj:
+        xrd_obj = get_pattern(content)
+        if not xrd_obj:
             error = "Not a valid pattern provided"
 
     elif fmt == "raw":
-        raw_obj = extract_pattern(content)
-        if not raw_obj:
+        xrd_obj = extract_pattern(content)
+        if not xrd_obj:
             error = "Not a valid pattern provided"
 
-    else:
-        return fmt_msg("Provided data format unsuitable or not recognized")
+    elif fmt == "topas":
+        try: input_obj = content.decode("ascii", errors="ignore")
+        except AttributeError: input_obj = content
 
-    if error:
-        return fmt_msg(error)
+    else: return fmt_msg("Provided data format unsuitable or not recognized")
+
+    if error: return fmt_msg(error)
 
     if ase_obj:
         if "disordered" in ase_obj.info:
@@ -116,21 +125,18 @@ def create():
             status=200,
         )
 
-    elif raw_obj:
-        name = request.values.get("name") or get_pattern_name()
-        maxnamelen = 24
-        if len(name) > maxnamelen:
-            name = name[:maxnamelen]
-
+    elif xrd_obj:
+        name = get_name(request.values.get("name"), "XRD")
         db = get_data_storage()
-        new_uuid = db.put_item(dict(name=name), raw_obj["content"], raw_obj["type"])
+        new_uuid = db.put_item(dict(name=name, oname=request.values.get("name")),
+            xrd_obj["content"], xrd_obj["type"])
         db.close()
 
         return Response(
             json.dumps(
                 dict(
                     uuid=new_uuid,
-                    type=raw_obj["type"],
+                    type=xrd_obj["type"],
                     name=name,
                 ),
                 indent=4,
@@ -139,8 +145,27 @@ def create():
             status=200,
         )
 
-    else:
-        abort(400)
+    elif input_obj:
+        name = get_name(request.values.get("name"), "CALC")
+        db = get_data_storage()
+        new_uuid = db.put_item(dict(name=name, oname=request.values.get("name")),
+            input_obj, Data_type.user_input)
+        db.close()
+
+        return Response(
+            json.dumps(
+                dict(
+                    uuid=new_uuid,
+                    type=Data_type.user_input,
+                    name=name,
+                ),
+                indent=4,
+            ),
+            content_type="application/json",
+            status=200,
+        )
+
+    else: abort(400)
 
 
 @bp_data.route("/import", methods=["POST"])
@@ -282,20 +307,19 @@ def examine():
     item = db.get_item(uuid)
     db.close()
 
-    if not item:
-        return fmt_msg("Sorry these data cannot be shown")
+    if not item: return fmt_msg("Sorry these data cannot be shown")
 
     output = {}
 
     if item["type"] == Data_type.pattern:
         try: content = json.loads(item["content"])
-        except Exception: return fmt_msg("Sorry erroneous data cannot be shown")
+        except Exception: return fmt_msg("Sorry cannot show erroneous format")
 
-        try: ymax = max([y for _, y in content]) # normalize
-        except ValueError: return fmt_msg("Sorry erroneous data cannot be shown")
+        try: ymax = max([row[1] for row in content]) # normalize intensities
+        except ValueError: return fmt_msg("Sorry cannot show erroneous data")
 
         # for GUI Plot
-        output["content"] = [[x, int(round(y / ymax * 100))] for x, y in content]
+        output["content"] = [[row[0], int(round(row[1] / ymax * 100))] for row in content]
 
     elif item["type"] == Data_type.property:
         output["engine"] = item["metadata"].get(
@@ -304,6 +328,9 @@ def examine():
 
         try: output["content"] = json.loads(item["content"])
         except Exception: return fmt_msg("Sorry erroneous data cannot be shown")
+
+    elif item["type"] == Data_type.user_input:
+        output["content"] = item["content"]
 
     elif item["type"] == Data_type.structure:
         ase_obj = ase_unserialize(item["content"])
@@ -318,8 +345,7 @@ def examine():
             ase_io.write(fd, ase_obj, format="vasp")
             output["content"] = fd.getvalue()
 
-    else:
-        return fmt_msg("Sorry this data type cannot be shown")
+    else: return fmt_msg("Sorry this data type cannot be shown")
 
     return Response(
         json.dumps(output, indent=4), content_type="application/json", status=200

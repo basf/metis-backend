@@ -58,6 +58,9 @@ def cif_to_ase(cif_string):
         else:
             return None, "Absent space group info in CIF"
 
+        if "_atom_site_fract_x" not in parsed_cif:
+            return None, "No required fractional coordinates found in CIF"
+
         try:
             cellpar = (
                 float(parsed_cif["_cell_length_a"][0].split("(")[0]),
@@ -83,14 +86,14 @@ def cif_to_ase(cif_string):
                             for char in parsed_cif["_atom_site_fract_z"]
                         ],
                     ]
-                ).astype(np.float)
+                ).astype(float)
             )
             occupancies = [
                 float(occ.split("(")[0])
                 for occ in parsed_cif.get("_atom_site_occupancy", [])
             ]
         except:
-            return None, "Unexpected non-numerical values occured in CIF"
+            return None, "Non-standard values occured in CIF"
 
     symbols = parsed_cif.get("_atom_site_type_symbol")
 
@@ -134,12 +137,12 @@ def cif_to_ase(cif_string):
                 spacegroup=spacegroup,
                 cellpar=cellpar,
                 primitive_cell=True,
-                onduplicates="error",
+                onduplicates="warn",
                 info=dict(disordered=occ_data) if occ_data else {},
             ),
             None,
         )
-    except:
+    except Exception:
         return None, "Unrecognized sites or invalid site symmetry in CIF"
 
     #cif_file = StringIO(cif_string)

@@ -24,6 +24,7 @@ class Data_type:
     property = 3
     workflow = 4
     pattern = 5
+    user_input = 6
 
 
 class Data_storage:
@@ -154,12 +155,14 @@ class Data_storage:
             for row in self.cursor.fetchall()
         ]
 
-    def search_item(self, content):
-        self.cursor.execute(
-            "SELECT item_id, metadata, content, type FROM {NODE_TABLE} WHERE content = '{content}';".format(
-                NODE_TABLE=NODE_TABLE, content=content
-            )
-        )
+    def search_item(self, needle, name=False):
+
+        if name:
+            query = f"SELECT item_id, metadata, content, type FROM {NODE_TABLE} WHERE metadata->>'oname' LIKE '{needle}%%';"
+        else:
+            query = f"SELECT item_id, metadata, content, type FROM {NODE_TABLE} WHERE content = '{needle}';"
+
+        self.cursor.execute(query)
         row = self.cursor.fetchone()
         if not row:
             return False

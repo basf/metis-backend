@@ -3,7 +3,7 @@ import random
 import set_path
 from metis_backend.datasources import Data_type
 from metis_backend.structures.chemical_formulae import common_chem_elements
-from metis_backend.calculations.xrpd import get_pattern_name
+from metis_backend.helpers import get_rnd_string
 
 
 common_chem_elements = common_chem_elements.split()
@@ -24,7 +24,7 @@ def gen_data_item(data_type):
         meta["name"] = gen_chem_formula()  # FIXME
 
     elif data_type == Data_type.pattern:
-        meta["name"] = get_pattern_name()
+        meta["name"] = get_rnd_string()
 
     else:
         raise RuntimeError
