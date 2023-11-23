@@ -4,7 +4,7 @@
 
 **This is the third part of the whole Metis infra: [GUI](https://github.com/basf/metis-gui) &rlarr; [BFF](https://github.com/basf/metis-bff) &rlarr; [backend](https://github.com/basf/metis-backend).**
 
-<p class="what_is_metis"><dfn>Metis</dfn> is an open scientific _framework_, materials data _organizer_, and collaborative _online platform_ for the nanotechnology research. It was designed for the materials research teams at the experimental and virtual laboratories. Metis is an AI-ready solution, aiming to bring the recent advances of computer science into a rather conservative area of materials development and quality control. Metis currently focuses on the **X-ray powder diffraction** and **atomistic simulations**. It was started in 2021 in BASF (Ludwigshafen am Rhein, Germany) by Bernd Hinrichsen and Evgeny Blokhin.</p>
+<p class="what_is_metis"><dfn>Metis</dfn> is an open scientific framework, materials data organizer, and collaborative online platform for the nanotechnology research. It was designed for the materials research teams at the experimental and virtual laboratories. Metis is an AI-ready solution, aiming to bring the recent advances of computer science into a rather conservative area of new materials development and quality control. Metis currently focuses on the X-ray powder diffraction and atomistic simulations. It was started in 2021 in BASF (Ludwigshafen am Rhein, Germany) by Bernd Hinrichsen and Evgeny Blokhin.</p>
 
 In particular, this backend presents minimalistic utility toolset in materials informatics and Flask-based CRUD-server for the nano-scale crystalline data, XRPD measurements, and cloud simulations.
 
