@@ -1,0 +1,53 @@
+[build-system]
+requires = ["flit_core", "cython"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "metis_backend"
+dynamic = ["version"]
+description = "Metis infra utility toolset and CRUD-server for materials informatics"
+authors = [{name = "Evgeny Blokhin", email = "eb@tilde.pro"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: AiiDA",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+keywords = ["materials informatics", "materials platform", "nanotechnology", "virtual laboratory"]
+requires-python = ">=3.8"
+dependencies = [
+    "pg8000",
+    "flask",
+    "netius",
+    "unidecode",
+    "pyparsing <= 2.4.7",
+    "matplotlib",
+    "numpy",
+    "scipy",
+    "ase",
+    "pycodcif",
+    "spglib",
+    "yascheduler",
+    "xylib-py",
+]
+
+[project.urls]
+Home = "https://github.com/basf/metis-backend"
+Issues = "https://github.com/basf/metis-backend/issues"
+Source = "https://github.com/basf/metis-backend"
+
+[tool.flit.module]
+name = "metis_backend"
