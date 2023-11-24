@@ -1,13 +1,12 @@
 [build-system]
-requires = ["flit_core", "cython"]
-build-backend = "flit_core.buildapi"
+requires = ["setuptools", "cython"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "metis_backend"
-dynamic = ["version"]
+dynamic = ["version", "readme", "dependencies"]
 description = "Metis infra utility toolset and CRUD-server for materials informatics"
 authors = [{name = "Evgeny Blokhin", email = "eb@tilde.pro"}]
-readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -28,26 +27,16 @@ classifiers = [
 ]
 keywords = ["materials informatics", "materials platform", "nanotechnology", "virtual laboratory"]
 requires-python = ">=3.8"
-dependencies = [
-    "pg8000",
-    "flask",
-    "netius",
-    "unidecode",
-    "pyparsing <= 2.4.7",
-    "matplotlib",
-    "numpy",
-    "scipy",
-    "ase",
-    "pycodcif",
-    "spglib",
-    "yascheduler",
-    "xylib-py",
-]
 
 [project.urls]
 Home = "https://github.com/basf/metis-backend"
 Issues = "https://github.com/basf/metis-backend/issues"
 Source = "https://github.com/basf/metis-backend"
 
-[tool.flit.module]
-name = "metis_backend"
+[tool.setuptools]
+packages = ["metis_backend"]
+
+[tool.setuptools.dynamic]
+version = {attr = "metis_backend.__version__"}
+readme = {file = ["README.rst"]}
+dependencies = {file = ["requirements.txt"]}

@@ -9,12 +9,11 @@ unidecode
 # Scientific part
 
 pyparsing <= 2.4.7
-cython # NB might be required beforehand
-matplotlib >= 3.8.1
+matplotlib
 numpy
 scipy
 ase
 pycodcif
 spglib
-yascheduler >= 1.0.12
+yascheduler
 xylib-py # NB apt-get install libboost-all-dev
