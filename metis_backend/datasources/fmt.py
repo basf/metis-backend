@@ -37,7 +37,7 @@ def detect_format(string):
     # XY patterns (TSV-alike)
     counter = 0
     for line in lines[:-1]:
-        if line.startswith("'"):
+        if line.startswith(("'", "*", "#")): # Rigaku features
             continue
         try:
             [float(item) for item in line.split(maxsplit=2)]
@@ -54,7 +54,8 @@ def detect_format(string):
         return "raw"
 
     # Synchrotron HDF5 measurements
-    # TODO
+    elif flag == b"\x89HDF" and b"pyfai" in string:
+        return "nexus"
 
     return None
 

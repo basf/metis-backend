@@ -1,3 +1,4 @@
+import base64
 import random
 import string
 
@@ -6,10 +7,10 @@ from metis_backend.datasources import Data_type
 
 def get_pattern(resource):
     """
-    Check if a file / given string contains computed XRPD pattern
-    (two columns of floats)
-    TODO
-    process large patterns in-place leaving only their integral feature
+    Check if a file or string contains XRPD pattern
+    (2 or 3 columns of floats)
+    TODO?
+    process large patterns in-place leaving only their integral features
     """
     output = []
 
@@ -91,7 +92,7 @@ def get_topas_error(path):
     with open(path, "rb") as f:
         topas_log = f.read(1024)
 
-    # Fix problematic Windows encoding
+    # Fix problematic Windows encoding: line breaks + ascii
     charmap = set([10, 13] + list(range(32, 128)))
     topas_log = ''.join(chr(byte) for byte in topas_log if byte in charmap)
 
@@ -99,6 +100,19 @@ def get_topas_error(path):
         return dict(content=dict(error=topas_log.splitlines()))
 
     return None
+
+
+def topas_serialize(input_str):
+    # TODO pytopas parsing
+    try: return base64.b64encode(input_str).decode("ascii")
+    except TypeError: return base64.b64encode(bytes(input_str, "utf-8")).decode("ascii")
+
+
+def topas_unserialize(string):
+    # TODO pytopas un-parsing
+    input_str = base64.b64decode(string)
+    charmap = set([10, 13] + list(range(32, 128)))
+    return ''.join(chr(byte) for byte in input_str if byte in charmap)
 
 
 if __name__ == "__main__":

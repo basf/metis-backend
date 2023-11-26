@@ -5,6 +5,7 @@ import random # TODO
 
 import set_path
 from metis_backend.structures.chemical_formulae import parse_formula
+from metis_backend.structures.struct_utils import sgn_to_label
 
 
 BFF_PREFIX = 'bff_'
@@ -65,7 +66,10 @@ def get_or_create_tag(conn, cursor, user_id, type_id, title, descr):
 
 
 def save_as_phase(db, node_uuid, phase):
-
+    """
+    Insert the newly found phase collection
+    into the database
+    """
     logging.warning(f"Assigning phase {phase} to node {node_uuid}")
 
     db.cursor.execute("""SELECT id FROM {} WHERE uuid = '{}';""".format(
@@ -78,7 +82,7 @@ def save_as_phase(db, node_uuid, phase):
 
     datasrc_id = found[0]
 
-    title = f"{clean_formula_tags(phase[1])} *{phase[2]}"
+    title = f"{clean_formula_tags(phase[1])} {sgn_to_label(phase[2])} *{phase[2]}"
     #title = f"{formula_to_chars(phase[1])} *{phase[2]}" # FIXME entities are not rendered properly
     descr = f"{PHASE_DESCR}{phase[0]}"
 

@@ -66,11 +66,7 @@ def webhook_auth(f):
 
 
 def fmt_msg(msg, http_code=400):
-    if http_code == 500:
-        current_app.logger.critical(msg)
-    else:
-        current_app.logger.error(msg)
-
+    current_app.logger.error(msg)
     return Response('{"error":"%s"}' % msg, content_type='application/json', status=http_code)
 
 

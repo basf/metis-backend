@@ -21,6 +21,7 @@ from metis_backend.helpers import (
     get_rnd_string,
 )
 from metis_backend.calculations import Calc_setup, _scheduler_status_mapping
+from metis_backend.calculations.xrpd import topas_serialize, topas_unserialize
 from metis_backend.datasources import Data_type
 from metis_backend.structures import html_formula
 from metis_backend.structures.struct_utils import ase_unserialize
@@ -86,7 +87,8 @@ def create():
 
     elif node["type"] == Data_type.user_input:
 
-        input_data, error = setup.preprocess(node["content"], engine, node["metadata"]["name"], db=db)
+        input_str = topas_unserialize(node["content"])
+        input_data, error = setup.preprocess(input_str, engine, node["metadata"]["name"], db=db)
         if error:
             return fmt_msg(error, 503)
 
@@ -459,7 +461,8 @@ def template():
 
     elif node["type"] == Data_type.user_input:
 
-        input_data, error = setup.preprocess(node["content"], "topas", node["metadata"]["name"], merged=True)
+        input_str = topas_unserialize(node["content"])
+        input_data, error = setup.preprocess(input_str, "topas", node["metadata"]["name"], merged=True)
         if error:
             return fmt_msg(error, 503)
 
@@ -499,6 +502,10 @@ def phaseid():
     @apiGroup Calculations
     @apiDescription Run phase ID
     """
+    if not os.path.exists(TMP_PHASEID_DIR):
+        logging.critical(f"Phase ID requires a folder {TMP_PHASEID_DIR} to exist")
+        return fmt_msg(f"Phase ID requires a folder {TMP_PHASEID_DIR} to exist", 503)
+
     uuid = request.values.get("uuid")
     if not uuid or not is_valid_uuid(uuid):
         return fmt_msg("Empty or invalid request")
