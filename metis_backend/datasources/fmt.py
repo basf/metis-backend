@@ -54,7 +54,7 @@ def detect_format(string):
         return "raw"
 
     # Synchrotron HDF5 measurements
-    elif flag == b"\x89HDF" and b"pyfai" in string:
+    elif flag == b"\x89HDF" and b"pyFAI" in string:
         return "nexus"
 
     return None

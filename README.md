@@ -11,7 +11,8 @@ Metis backend presents minimalistic utility toolset in materials informatics and
 
 ### Requirements
 
-The basic requirements are **Python**, **Numpy**, and **PostgreSQL**. Note that the Numpy depends on the low-level Fortran numeric system libraries, which might be absent in your system.
+The basic requirements are **Python**, **Numpy**, and **PostgreSQL**. Note that the Numpy depends on the low-level Fortran numeric system libraries, which might be absent in your system. The Python dependency `xylib-py` requires C++ Boost stack to compile, install it on Debian with `apt-get install libboost-all-dev`.
+
 
 A scientific cloud scheduler [yascheduler](https://github.com/tilde-lab/yascheduler) is required for a separate cloud orchestration. An optional requirement is [AiiDA](https://github.com/aiidateam/aiida-core), which can be linked to the cloud scheduler. The AiiDA is a Python framework for the complex scientific workflows, requiring PostgreSQL database and **RabbitMQ** message broker.
 
@@ -97,10 +98,10 @@ directory. This should start all dependencies and services.
 
 ### XRPD data
 
-- XY patterns (TSV-alike)
+- XY and XYE patterns (TSV-alike)
 - Bruker's RAW (*binary*)
-- Bruker's Topas CLI
-- Synchrotron HDF5 (*binary*)
+- Bruker's Topas CLI modeling
+- Synchrotron HDF5 NeXus (*binary*)
 
 
 ## License

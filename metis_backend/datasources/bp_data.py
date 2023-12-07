@@ -18,7 +18,7 @@ from metis_backend.helpers import (
 )
 from metis_backend.datasources import Data_type
 from metis_backend.datasources.fmt import detect_format
-from metis_backend.datasources.xrpd import extract_pattern
+from metis_backend.datasources.xrpd import extract_pattern, nexus_to_xye
 from metis_backend.structures import html_formula
 from metis_backend.structures.cif_utils import cif_to_ase
 from metis_backend.structures.struct_utils import (
@@ -86,6 +86,11 @@ def create():
         xrd_obj = extract_pattern(content)
         if not xrd_obj:
             error = "Not a valid pattern provided"
+
+    elif fmt == "nexus":
+        xrd_obj = nexus_to_xye(content)
+        if not xrd_obj:
+            error = "Not a valid synchrotron format provided"
 
     elif fmt == "topas":
         input_obj = topas_serialize(content)
