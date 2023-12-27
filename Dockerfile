@@ -3,7 +3,7 @@ FROM docker.io/library/python:3.10-bullseye
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y postgresql-client swig wait-for-it xz-utils \
+    && apt-get install -y libboost-dev postgresql-client swig wait-for-it xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # setup s6 init
