@@ -1,6 +1,6 @@
 # Metis scientific backend
 
-<p class="what_is_metis"><dfn>Metis</dfn> is an open scientific framework, materials data organizer, and collaborative online platform for the nanotechnology research. It was designed for the materials research teams at the physical and virtual laboratories. Metis is an AI-ready solution, aiming to bring the recent advances of computer science into a rather conservative area of new materials development and quality control. Metis currently focuses on the X-ray powder diffraction and atomistic simulations. It was started in 2021 in BASF (Ludwigshafen am Rhein, Germany) by Bernd Hinrichsen and Evgeny Blokhin.</p>
+<p class="what_is_metis"><dfn>Metis</dfn> is an open scientific framework, materials data organizer, and collaborative online platform for the nanotechnology research. It was designed for the offline physical and online virtual autonomous laboratories dealing with the materials science. Metis is an AI-ready solution, aiming to bring the recent advances of computer science into a rather conservative area of new materials development and quality control. Metis currently focuses on the X-ray powder diffraction and atomistic simulations. Its development was started in 2021 in BASF (Ludwigshafen am Rhein, Germany) by Bernd Hinrichsen and Evgeny Blokhin.</p>
 
 <p align="center"><img src="https://github.com/basf/metis-backend/blob/master/logo.png" width="300" /></p>
 
@@ -72,7 +72,7 @@ A script `scripts/assign_phases.py` should be run regularly to organize users' u
 
 ## Run in containers
 
-This is an experimental feature intended primarily for development and testing.
+This is an experimental feature intended primarily for the development and testing.
 
 It is assumed that you have the `metis-backend`, `metis-bff`, and `metis-gui`
 repositories cloned on the same level. Also, you need `docker` (or `podman`

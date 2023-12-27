@@ -46,6 +46,15 @@ def get_q_twotheta_wv(angular_vals, wavelength):
     return q_values
 
 
+def get_twotheta_qwv(q_values, wavelength):
+    twotheta = np.zeros(len(q_values))
+
+    for n, q_value in enumerate(q_values):
+        twotheta[n] = np.rad2deg(2 * math.asin(wavelength * q_value / (4 * math.pi)))
+
+    return twotheta
+
+
 def get_q_dspace(dspacings):
     q_values = np.zeros(len(dspacings))
 
