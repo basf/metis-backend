@@ -19,14 +19,7 @@ MAX_PATT_LEN = 1200
 
 
 def get_non_zero_indices(data):
-    res = []
-
-    for i, datum in enumerate(data):
-        if datum != 0:
-            res.append(i)
-
-    return res
-    #return np.nonzero(data)[0]
+    return np.nonzero(data)[0]
 
 
 def cleanup_convert_dis(dis):
