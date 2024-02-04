@@ -1,0 +1,29 @@
+codes:
+  crystal:
+    Pcrystal@yascheduler
+
+options:
+  need_phonons: false
+  need_elastic_constants: false
+  need_properties: false
+
+basis_family: MPDSBSL_NEUTRAL_6TH
+
+default:
+  crystal:
+    scf:
+      k_points: [6, 6]
+      dft:
+        xc: ['PBE', 'PBE']
+      numerical:
+        TOLDEE: 7
+      post_scf: ['PPAN']
+
+  properties:
+    band:
+      shrink: 6
+      k_points: 30
+    newk:
+      k_points: [6, 6]
+    dos:
+      n_e: 1000

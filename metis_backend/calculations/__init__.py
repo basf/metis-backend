@@ -5,6 +5,7 @@ import json
 from yascheduler import Yascheduler
 
 from metis_backend.calculations.xrpd import get_pattern, export_pattern, get_topas_output, get_topas_error
+from metis_backend.calculations.pcrystal import Pcrystal_setup
 from metis_backend.datasources import Data_type
 from metis_backend.datasources.fmt import is_ase_obj
 from metis_backend.structures.topas import ase_to_topas, get_topas_keyword
@@ -17,7 +18,7 @@ _scheduler_status_mapping = {
     Yascheduler.STATUS_DONE: 100,
 }
 
-SUPPORTED_ENGINES = ["dummy", "topas", "fullprof"]
+SUPPORTED_ENGINES = ["dummy", "topas", "fullprof", "pcrystal"]
 
 
 class Calc_setup:
@@ -113,6 +114,21 @@ class Calc_setup:
                 "merged" if kwargs.get("merged") else "calc.pcr": template
             }
 
+        elif engine == "pcrystal":
+
+            if not is_ase_obj(calc_obj):
+                return None, "Inputs not supported"
+
+            setup = Pcrystal_setup(calc_obj, custom_template=kwargs.get("custom_template"))
+            error = setup.validate()
+            if error:
+                return None, error
+
+            compiled = {
+                "INPUT": setup.get_input_setup(name),
+                "fort.34": setup.get_input_struct(),
+            }
+
         else:
             compiled = {
                 "1.input": self.get_input("dummy"),
@@ -128,6 +144,7 @@ class Calc_setup:
         parsers = {
             "topas": (get_pattern, get_topas_output, get_topas_error),
             "fullprof": (get_pattern, ),
+            "pcrystal": (Pcrystal_setup.parse, ),
         }
         default_parsers = (lambda x: {"content": 42}, ) # FIXME?
 
