@@ -14,7 +14,7 @@ numpy
 scipy
 ase
 pycodcif
-spglib
+spglib <= 2.0.2
 yascheduler
 xylib-py # NB apt-get install libboost-all-dev
 nexusformat
