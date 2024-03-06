@@ -20,6 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
@@ -34,7 +35,7 @@ Issues = "https://github.com/basf/metis-backend/issues"
 Source = "https://github.com/basf/metis-backend"
 
 [tool.setuptools]
-packages = ["metis_backend"]
+packages = ["metis_backend", "metis_backend.structures", "metis_backend.calculations", "metis_backend.datasources", "metis_backend.phaseid"]
 
 [tool.setuptools.dynamic]
 version = {attr = "metis_backend.__version__"}

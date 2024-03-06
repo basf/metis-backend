@@ -105,7 +105,10 @@ def optimade_to_ase(structure, skip_disorder=False):
         None *or* error (str)
     """
     if type(structure) == str:
-        structure = json.loads(structure)
+        try:
+            structure = json.loads(structure)
+        except Exception:
+            return None, "Misformatted data occured"
 
     # if 'cartesian_site_positions' not in structure['attributes'] or 'lattice_vectors' not in structure['attributes']:
     #    return None, "Invalid structure"

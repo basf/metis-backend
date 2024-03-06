@@ -398,7 +398,7 @@ def update():
             except Exception:
                 if result:
                     current_app.logger.critical(
-                        "Internal error, calc %s not delivered" % task_id
+                        "Internal error, calc %s not delivered to GUI" % task_id
                     )
 
         else: abort(403)
