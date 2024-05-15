@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PG_VERSION="14.10" # NB subject to update
+PG_VERSION="14.13" # NB subject to update
 PG_SOURCE_ADDR=https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.gz
 
 SETTINGS=(
@@ -17,7 +17,31 @@ done
 
 apt-get -y update && apt-get -y upgrade
 update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-apt-get -y install build-essential nginx rabbitmq-server libatlas-base-dev libopenblas-dev libblas-dev libffi-dev libreadline6-dev zlib1g-dev liblapack-dev supervisor python3-dev python3-pip python3-numpy python3-scipy python3-matplotlib p7zip-full git swig python3-setuptools pkg-config libboost-all-dev
+
+apt-get install -y \
+    build-essential \
+    nginx \
+    rabbitmq-server \
+    p7zip-full \
+    git \
+    swig \
+    pkg-config \
+    zlib1g-dev \
+    libreadline6-dev \
+    libboost-all-dev \
+    libatlas-base-dev \
+    libopenblas-dev \
+    libblas-dev \
+    libffi-dev \
+    liblapack-dev \
+    supervisor \
+    python3-setuptools \
+    python3-dev \
+    python3-pip \
+    python3-numpy \
+    python3-scipy \
+    python3-matplotlib \
+;
 
 update-rc.d supervisor defaults
 update-rc.d supervisor enable
