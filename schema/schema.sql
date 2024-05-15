@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS backend_data_nodes (
     item_id    UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    metadata   jsonb NOT NULL, -- metadata["name"] contains HTML
+    metadata   jsonb NOT NULL, -- TODO metadata["name"] contains HTML
     content    VARCHAR NOT NULL,
     type       SMALLINT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS backend_data_links (
 
 CREATE TABLE IF NOT EXISTS backend_phases (
     phase_id INT PRIMARY KEY,
-    elements VARCHAR(128) NOT NULL, -- FIXME?
+    elements VARCHAR(128) NOT NULL,
     formula  VARCHAR(128) NOT NULL,
     spg      SMALLINT NOT NULL,
     natcell  SMALLINT NOT NULL
@@ -45,8 +45,8 @@ CREATE INDEX IF NOT EXISTS backend_phases_elements ON backend_phases USING btree
 CREATE TABLE IF NOT EXISTS backend_refstrs (
     ext_id   VARCHAR(128) PRIMARY KEY,
     phase_id INT,
-    provider SMALLINT DEFAULT 0, -- 0 Metis; 1 COD; 2 ICDD PDF4+; 3 CCDC; 4 MPDS;
-    name VARCHAR(384) NOT NULL, -- contains HTML
+    provider SMALLINT DEFAULT 0, -- TODO enum 0 Metis; 1 COD; 2 ICDD PDF4+; 3 CCDC; 4 MPDS;
+    name VARCHAR(384) NOT NULL, -- TODO contains HTML
     content JSONB NOT NULL,
     FOREIGN KEY (phase_id) REFERENCES backend_phases (phase_id)
 );
